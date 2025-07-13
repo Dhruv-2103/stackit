@@ -1,19 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Users, MessageSquare, Trash2, Ban, Shield, AlertTriangle } from 'lucide-react';
+import { Users, MessageSquare, Trash2, Ban, Shield, AlertTriangle, Tags, Plus } from 'lucide-react';
 import useAdminStore from '../store/adminStore';
 import useAuthStore from '../store/authStore';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users');
-  const { users, questions, getAllUsers, getAllQuestions, toggleBanUser, deleteUser, deleteQuestion, deleteAnswer, isLoading, error } = useAdminStore();
+  const [tags, setTags] = useState([]);
+  const [newTagName, setNewTagName] = useState('');
+  const [showDeleteTagModal, setShowDeleteTagModal] = useState(false);
+  const [tagToDelete, setTagToDelete] = useState('');
+  const [showBanUserModal, setShowBanUserModal] = useState(false);
+  const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
+  const [showDeleteQuestionModal, setShowDeleteQuestionModal] = useState(false);
+  const [userToAction, setUserToAction] = useState({ id: '', name: '', isBanned: false });
+  const [questionToDelete, setQuestionToDelete] = useState({ id: '', title: '' });
+  const { users, questions, getAllUsers, getAllQuestions, toggleBanUser, deleteUser, deleteQuestion, deleteAnswer, getTags, addTag, deleteTag, isLoading, error } = useAdminStore();
   const { user } = useAuthStore();
 
   useEffect(() => {
     if (user?.role === 'admin') {
       getAllUsers();
       getAllQuestions();
+      loadTags();
     }
   }, [user]);
+
+  const loadTags = async () => {
+    const result = await getTags();
+    if (result.success) {
+      setTags(result.data);
+    }
+  };
 
   if (user?.role !== 'admin') {
     return (
@@ -27,40 +44,82 @@ const AdminPanel = () => {
     );
   }
 
-  const handleBanUser = async (userId, userName) => {
-    if (confirm(`Are you sure you want to ban/unban ${userName}?`)) {
-      const result = await toggleBanUser(userId);
-      if (!result.success) {
-        alert(result.error);
-      }
-    }
+  const handleBanUser = (userId, userName, isBanned) => {
+    setUserToAction({ id: userId, name: userName, isBanned });
+    setShowBanUserModal(true);
   };
 
-  const handleDeleteUser = async (userId, userName) => {
-    if (confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
-      const result = await deleteUser(userId);
-      if (!result.success) {
-        alert(result.error);
-      }
+  const confirmBanUser = async () => {
+    const result = await toggleBanUser(userToAction.id);
+    if (!result.success) {
+      alert(result.error);
     }
+    setShowBanUserModal(false);
   };
 
-  const handleDeleteQuestion = async (questionId, questionTitle) => {
-    if (confirm(`Are you sure you want to delete "${questionTitle}"? This will also delete all answers.`)) {
-      const result = await deleteQuestion(questionId);
-      if (!result.success) {
-        alert(result.error);
-      }
+  const handleDeleteUser = (userId, userName) => {
+    setUserToAction({ id: userId, name: userName });
+    setShowDeleteUserModal(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    const result = await deleteUser(userToAction.id);
+    if (!result.success) {
+      alert(result.error);
     }
+    setShowDeleteUserModal(false);
+  };
+
+  const handleDeleteQuestion = (questionId, questionTitle) => {
+    setQuestionToDelete({ id: questionId, title: questionTitle });
+    setShowDeleteQuestionModal(true);
+  };
+
+  const confirmDeleteQuestion = async () => {
+    const result = await deleteQuestion(questionToDelete.id);
+    if (!result.success) {
+      alert(result.error);
+    }
+    setShowDeleteQuestionModal(false);
   };
 
   const handleDeleteAnswer = async (answerId) => {
-    if (confirm('Are you sure you want to delete this answer?')) {
-      const result = await deleteAnswer(answerId);
-      if (!result.success) {
-        alert(result.error);
-      }
+    const result = await deleteAnswer(answerId);
+    if (!result.success) {
+      alert(result.error);
     }
+  };
+
+  const handleAddTag = async (e) => {
+    e.preventDefault();
+    if (!newTagName.trim()) return;
+    
+    const result = await addTag(newTagName.trim());
+    if (result.success) {
+      setNewTagName('');
+      loadTags();
+      alert(result.message);
+    } else {
+      alert(result.error);
+    }
+  };
+
+  const handleDeleteTag = (tagName) => {
+    setTagToDelete(tagName);
+    setShowDeleteTagModal(true);
+  };
+
+  const confirmDeleteTag = async () => {
+    const result = await deleteTag(tagToDelete);
+    if (result.success) {
+      loadTags();
+      getAllQuestions(); // Refresh questions to show updated tags
+      alert(result.message);
+    } else {
+      alert(result.error);
+    }
+    setShowDeleteTagModal(false);
+    setTagToDelete('');
   };
 
   return (
@@ -94,6 +153,17 @@ const AdminPanel = () => {
           >
             <MessageSquare className="w-4 h-4" />
             Questions ({questions.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('tags')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === 'tags'
+                ? 'bg-[#007AFF] text-white'
+                : 'bg-[#1C1C1E] text-[#8E8E93] hover:text-white'
+            }`}
+          >
+            <Tags className="w-4 h-4" />
+            Tags ({tags.length})
           </button>
         </div>
 
@@ -149,7 +219,7 @@ const AdminPanel = () => {
                         {user.role !== 'admin' && (
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleBanUser(user._id, user.name)}
+                              onClick={() => handleBanUser(user._id, user.name, user.isBanned)}
                               className={`p-2 rounded-lg transition-colors ${
                                 user.isBanned
                                   ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
@@ -173,6 +243,52 @@ const AdminPanel = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tags Tab */}
+        {activeTab === 'tags' && (
+          <div className="bg-[#1C1C1E] rounded-lg p-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Add New Tag</h3>
+              <form onSubmit={handleAddTag} className="flex gap-3">
+                <input
+                  type="text"
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  placeholder="Enter tag name"
+                  className="flex-1 bg-[#2C2C2E] text-white border border-[#3A3A3C] rounded-lg px-4 py-2 focus:outline-none focus:border-[#007AFF]"
+                />
+                <button
+                  type="submit"
+                  className="bg-[#007AFF] hover:bg-[#0056CC] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Tag
+                </button>
+              </form>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">Existing Tags ({tags.length})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {tags.map((tag) => (
+                  <div key={tag} className="bg-[#2C2C2E] rounded-lg p-3 flex items-center justify-between">
+                    <span className="text-white">{tag}</span>
+                    <button
+                      onClick={() => handleDeleteTag(tag)}
+                      className="p-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                      title="Delete Tag"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {tags.length === 0 && (
+                <p className="text-[#8E8E93] text-center py-8">No tags found. Tags will appear here when users create questions.</p>
+              )}
             </div>
           </div>
         )}
@@ -241,6 +357,151 @@ const AdminPanel = () => {
         {isLoading && (
           <div className="text-center py-8">
             <div className="animate-pulse text-[#8E8E93]">Loading...</div>
+          </div>
+        )}
+
+        {/* Delete Tag Confirmation Modal */}
+        {showDeleteTagModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1C1C1E] rounded-xl p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Delete Tag</h3>
+              </div>
+              
+              <p className="text-[#8E8E93] mb-6">
+                The tag <span className="text-white font-medium">"{tagToDelete}"</span> will be permanently deleted from all questions. This action cannot be undone.
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteTagModal(false)}
+                  className="flex-1 bg-[#2C2C2E] text-white py-2 px-4 rounded-lg font-medium hover:bg-[#3C3C3E] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteTag}
+                  className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                >
+                  Delete Tag
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ban/Unban User Modal */}
+        {showBanUserModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1C1C1E] rounded-xl p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  userToAction.isBanned ? 'bg-green-500/20' : 'bg-yellow-500/20'
+                }`}>
+                  <Ban className={`w-5 h-5 ${
+                    userToAction.isBanned ? 'text-green-400' : 'text-yellow-400'
+                  }`} />
+                </div>
+                <h3 className="text-lg font-semibold text-white">
+                  {userToAction.isBanned ? 'Unban User' : 'Ban User'}
+                </h3>
+              </div>
+              
+              <p className="text-[#8E8E93] mb-6">
+                {userToAction.isBanned 
+                  ? `User "${userToAction.name}" will be unbanned and can access the platform again.`
+                  : `User "${userToAction.name}" will be banned and cannot access the platform.`
+                }
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBanUserModal(false)}
+                  className="flex-1 bg-[#2C2C2E] text-white py-2 px-4 rounded-lg font-medium hover:bg-[#3C3C3E] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmBanUser}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    userToAction.isBanned 
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                  }`}
+                >
+                  {userToAction.isBanned ? 'Unban' : 'Ban'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete User Modal */}
+        {showDeleteUserModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1C1C1E] rounded-xl p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Delete User</h3>
+              </div>
+              
+              <p className="text-[#8E8E93] mb-6">
+                User <span className="text-white font-medium">"{userToAction.name}"</span> and all their data will be permanently deleted. This action cannot be undone.
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteUserModal(false)}
+                  className="flex-1 bg-[#2C2C2E] text-white py-2 px-4 rounded-lg font-medium hover:bg-[#3C3C3E] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteUser}
+                  className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                >
+                  Delete User
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Question Modal */}
+        {showDeleteQuestionModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1C1C1E] rounded-xl p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-red-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Delete Question</h3>
+              </div>
+              
+              <p className="text-[#8E8E93] mb-6">
+                Question <span className="text-white font-medium">"{questionToDelete.title}"</span> and all its answers will be permanently deleted. This action cannot be undone.
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteQuestionModal(false)}
+                  className="flex-1 bg-[#2C2C2E] text-white py-2 px-4 rounded-lg font-medium hover:bg-[#3C3C3E] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteQuestion}
+                  className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                >
+                  Delete Question
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

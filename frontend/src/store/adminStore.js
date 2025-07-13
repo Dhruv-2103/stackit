@@ -85,6 +85,37 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
+  // Tag management
+  getTags: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/tags`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to fetch tags';
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  addTag: async (tagName) => {
+    try {
+      const response = await axios.post(`${API_URL}/tags`, { tagName });
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to add tag';
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  deleteTag: async (tagName) => {
+    try {
+      const response = await axios.delete(`${API_URL}/tags/${tagName}`);
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to delete tag';
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Clear error
   clearError: () => set({ error: null }),
 }));

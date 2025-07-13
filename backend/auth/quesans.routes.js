@@ -1,5 +1,5 @@
 import express from "express";
-import { createAnswer, createQuestion, downvoteAnswer, downvoteQuestion, getAnswer, getQuestion, getQuestions, updateAnswer, updateQuestion, upvoteAnswer, upvoteQuestion } from "../controllers/quesans.controller.js";
+import { createAnswer, createQuestion, downvoteAnswer, downvoteQuestion, getAnswer, getQuestion, getQuestions, getTags, updateAnswer, updateQuestion, upvoteAnswer, upvoteQuestion } from "../controllers/quesans.controller.js";
 import auth from "../middleware/auth.middleware.js";
 
 
@@ -14,6 +14,7 @@ router.post("/answer/:id" , auth, updateAnswer);
 
 router.get("/questions" , getQuestions);
 router.get("/questions/:id" , getQuestion);
+router.get("/tags" , getTags);
 
 router.get("/answers/:id" , getAnswer);
 

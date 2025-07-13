@@ -11,11 +11,11 @@ const Home = () => {
 
     useEffect(() => {
       if (!statsVisible) return;
-      
+
       const duration = 2000;
       const increment = target / (duration / 16);
       let current = 0;
-      
+
       const timer = setInterval(() => {
         current += increment;
         if (current >= target) {
@@ -120,15 +120,15 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-animated animate-gradient text-white relative overflow-hidden">
 
-      
 
-      
+
+
       {/* Floating particles */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {[...Array(10)].map((_, i) => (
-          <div 
-            key={i} 
-            className="absolute w-1 h-1 bg-orange-500/60 rounded-full animate-float" 
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-orange-500/60 rounded-full animate-float"
             style={{
               left: `${10 + i * 10}%`,
               top: `${Math.random() * 100}%`,
@@ -150,14 +150,14 @@ const Home = () => {
             💡 Join StackIt, the collaborative Q&A platform where knowledge flows freely and every question leads to discovery. Connect with brilliant minds worldwide! 🌍
           </p>
           <div className="flex gap-6 justify-center flex-wrap">
-            <Link 
-              to="/register" 
+            <Link
+              to="/register"
               className="px-8 py-4 rounded-full btn-gradient animate-gradient-text text-white font-bold shadow-lg shadow-orange-500/40 hover:shadow-xl hover:shadow-orange-500/60 hover:-translate-y-1 hover:scale-105 transition-all duration-300"
             >
               🚀 Start Asking Questions
             </Link>
-            <Link 
-              to="/register" 
+            <Link
+              to="/questions"
               className="px-8 py-4 rounded-full bg-white/10 backdrop-blur-sm border-2 border-orange-500/30 text-white hover:bg-orange-500/20 hover:border-orange-500/80 hover:-translate-y-1 transition-all duration-300 font-semibold"
             >
               🌟 Explore Community
@@ -199,10 +199,10 @@ const Home = () => {
           <p className="text-xl text-white/80 text-center max-w-3xl mx-auto mb-16">
             Experience the power of community-driven learning with our intuitive platform designed for knowledge sharing.
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-white/8 backdrop-blur-xl rounded-3xl p-10 text-center border border-orange-500/20 cursor-pointer transition-all duration-500 hover:-translate-y-4 hover:scale-105 hover:bg-orange-500/10 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/20 group"
               >
@@ -230,8 +230,8 @@ const Home = () => {
           <p className="text-xl text-white/90 mb-12 leading-relaxed">
             🌟 Start your learning journey today. Ask questions, share knowledge, and connect with curious minds from around the world. Your next breakthrough is just one question away! 💫
           </p>
-          <Link 
-            to="/register" 
+          <Link
+            to="/register"
             className="px-10 py-5 text-xl rounded-full btn-gradient animate-gradient-text text-white font-bold shadow-lg shadow-orange-500/40 hover:shadow-xl hover:shadow-orange-500/60 hover:-translate-y-1 hover:scale-105 transition-all duration-300"
           >
             🎯 Create Your Account
@@ -250,9 +250,9 @@ const Home = () => {
               </p>
               <div className="flex gap-4">
                 {['📘', '🐦', '💼', '📷'].map((icon, index) => (
-                  <a 
+                  <a
                     key={index}
-                    href="#" 
+                    href="#"
                     className="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center text-orange-500 hover:bg-orange-500 hover:text-white hover:-translate-y-1 transition-all duration-300"
                   >
                     {icon}
@@ -260,7 +260,7 @@ const Home = () => {
                 ))}
               </div>
             </div>
-            
+
             {footerSections.map((section, index) => (
               <div key={index}>
                 <h3 className="text-orange-500 text-xl font-bold mb-4">{section.title}</h3>
@@ -276,7 +276,7 @@ const Home = () => {
               </div>
             ))}
           </div>
-          
+
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-white/60 text-sm">
               &copy; 2025 StackIt. Built for learners, by learners.

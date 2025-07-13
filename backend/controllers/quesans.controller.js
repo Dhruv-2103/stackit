@@ -141,6 +141,19 @@ export const getAnswer = async (req, res) => {
   }
 };
 
+// GET /tags
+export const getTags = async (req, res) => {
+  try {
+    const questions = await Question.find({}, 'tags');
+    const allTags = questions.flatMap(q => q.tags);
+    const uniqueTags = [...new Set(allTags)].sort();
+    res.json(uniqueTags);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Error getting tags' });
+  }
+};
+
 // PUT /questions/:id/upvote
 export const upvoteQuestion = async (req, res) => {
   try {

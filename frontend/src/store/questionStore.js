@@ -7,6 +7,7 @@ const useQuestionStore = create((set, get) => ({
   questions: [],
   currentQuestion: null,
   searchQuery: '',
+  tags: [],
   isLoading: false,
   error: null,
 
@@ -117,6 +118,18 @@ const useQuestionStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to downvote';
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Get all tags
+  getTags: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/tags`);
+      set({ tags: response.data });
+      return { success: true, data: response.data };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to fetch tags';
       return { success: false, error: errorMessage };
     }
   },

@@ -120,3 +120,54 @@ export const deleteAnswer = async (req, res) => {
     res.status(500).json({ message: 'Error deleting answer' });
   }
 };
+
+// Get all tags
+export const getAllTags = async (req, res) => {
+  try {
+    const questions = await Question.find({}, 'tags');
+    const allTags = questions.flatMap(q => q.tags);
+    const uniqueTags = [...new Set(allTags)].sort();
+    res.json(uniqueTags);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching tags' });
+  }
+};
+
+// Add new tag
+export const addTag = async (req, res) => {
+  try {
+    const { tagName } = req.body;
+    if (!tagName || tagName.trim() === '') {
+      return res.status(400).json({ message: 'Tag name is required' });
+    }
+    
+    const normalizedTag = tagName.trim().toLowerCase();
+    
+    // Check if tag already exists
+    const existingQuestion = await Question.findOne({ tags: normalizedTag });
+    if (existingQuestion) {
+      return res.status(400).json({ message: 'Tag already exists' });
+    }
+    
+    res.json({ message: 'Tag can be added when creating questions', tag: normalizedTag });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding tag' });
+  }
+};
+
+// Delete tag from all questions
+export const deleteTag = async (req, res) => {
+  try {
+    const { tagName } = req.params;
+    
+    // Remove tag from all questions
+    await Question.updateMany(
+      { tags: tagName },
+      { $pull: { tags: tagName } }
+    );
+    
+    res.json({ message: 'Tag deleted from all questions successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting tag' });
+  }
+};

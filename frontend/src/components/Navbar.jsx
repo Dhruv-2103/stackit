@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useQuestionStore from '../store/questionStore';
 import useNotificationStore from '../store/notificationStore';
@@ -10,13 +10,19 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  
+
   const { user, logout } = useAuthStore();
   const { setSearchQuery } = useQuestionStore();
   const { notifications, unreadCount, getNotifications, markAsRead, markAllAsRead } = useNotificationStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const isLoggedIn = !!user;
-  
+  const isHomePage = location.pathname === '/';
+  const isLoginPage = location.pathname === '/login';
+  const isSignupPage = location.pathname === '/register';
+  const isAuthPage = isLoginPage || isSignupPage;
+  const isQuestionsPage = location.pathname === '/questions';
+
   // Fetch notifications when user logs in
   React.useEffect(() => {
     if (user) {
@@ -43,7 +49,7 @@ const Navbar = () => {
     setShowUserMenu(false);
     navigate('/');
   };
-  
+
   const handleSearch = (value) => {
     setSearchValue(value);
     setSearchQuery(value);
@@ -63,51 +69,49 @@ const Navbar = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex gap-4">
-          <Link to="/questions" className="text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
-            Questions
-          </Link>
-          <Link to="/tags" className="text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
-            Tags
-          </Link>
-          {user?.role === 'admin' && (
-            <Link to="/admin" className="text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
-              Admin Panel
+        {!isHomePage && !isAuthPage && (
+          <nav className="hidden md:flex gap-4">
+            <Link to="/questions" className="text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
+              Questions
             </Link>
-          )}
-        </nav>
+          </nav>
+        )}
 
         {/* Search Bar - Desktop */}
-        <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="Search questions..."
-              value={searchValue}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full bg-[#2C2C2E] text-white placeholder-[#8E8E93] border border-[#3A3A3C] rounded-lg px-4 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:bg-[#1C1C1E] transition-all duration-200"
-            />
-            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#8E8E93]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+        {isQuestionsPage && (
+          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Search questions..."
+                value={searchValue}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full bg-[#2C2C2E] text-white placeholder-[#8E8E93] border border-[#3A3A3C] rounded-lg px-4 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:bg-[#1C1C1E] transition-all duration-200"
+              />
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#8E8E93]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Mobile Search Icon and Menu Button */}
         <div className="md:hidden flex items-center gap-2">
           {!showMobileSearch && (
             <>
-              <button 
-                className="text-[#8E8E93] hover:text-white p-2"
-                onClick={() => setShowMobileSearch(true)}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-              
+              {isQuestionsPage && (
+                <button
+                  className="text-[#8E8E93] hover:text-white p-2"
+                  onClick={() => setShowMobileSearch(true)}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              )}
+
               {/* Mobile Menu Button */}
-              <button 
+              <button
                 className="text-[#8E8E93] hover:text-white p-2"
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
               >
@@ -120,7 +124,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Search Bar */}
-        {showMobileSearch && (
+        {showMobileSearch && isQuestionsPage && (
           <div className="md:hidden flex-1 mx-4">
             <div className="relative">
               <input
@@ -134,7 +138,7 @@ const Navbar = () => {
               <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#8E8E93]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <button 
+              <button
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#8E8E93] hover:text-white"
                 onClick={() => {
                   setShowMobileSearch(false)
@@ -166,7 +170,7 @@ const Navbar = () => {
                     <div className="px-4 py-4 bg-[#2C2C2E] border-b border-[#3A3A3C] flex justify-between items-center">
                       <h4 className="text-white font-semibold m-0">Notifications</h4>
                       {unreadCount > 0 && (
-                        <button 
+                        <button
                           onClick={markAllAsRead}
                           className="text-[#007AFF] text-xs hover:underline"
                         >
@@ -176,12 +180,11 @@ const Navbar = () => {
                     </div>
                     <div className="max-h-72 overflow-y-auto">
                       {notifications.length > 0 ? notifications.map(notification => (
-                        <div 
-                          key={notification._id} 
+                        <div
+                          key={notification._id}
                           onClick={() => handleNotificationClick(notification)}
-                          className={`px-4 py-3 border-b border-[#3A3A3C] cursor-pointer hover:bg-[#2C2C2E] transition-colors last:border-b-0 ${
-                            !notification.isRead ? 'bg-[#FF6B35]/5 border-l-4 border-l-[#FF6B35]' : ''
-                          }`}
+                          className={`px-4 py-3 border-b border-[#3A3A3C] cursor-pointer hover:bg-[#2C2C2E] transition-colors last:border-b-0 ${!notification.isRead ? 'bg-[#FF6B35]/5 border-l-4 border-l-[#FF6B35]' : ''
+                            }`}
                         >
                           <p className="text-white text-sm mb-1 leading-5">{notification.message}</p>
                           <div className="flex justify-between items-center">
@@ -202,7 +205,7 @@ const Navbar = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* User Menu */}
               <div className="relative">
                 <button className="w-9 h-9 rounded-full gradient-orange text-white border-none font-semibold text-sm cursor-pointer flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg" onClick={toggleUserMenu}>
@@ -218,6 +221,11 @@ const Navbar = () => {
                     <Link to="/profile" onClick={() => setShowUserMenu(false)} className="block w-full px-4 py-3 bg-transparent text-[#8E8E93] text-sm text-left cursor-pointer transition-all duration-200 hover:bg-[#2C2C2E] hover:text-white">
                       Profile
                     </Link>
+                    {user?.role === 'admin' && (
+                      <Link to="/admin" onClick={() => setShowUserMenu(false)} className="block w-full px-4 py-3 bg-transparent text-[#8E8E93] text-sm text-left cursor-pointer transition-all duration-200 hover:bg-[#2C2C2E] hover:text-white">
+                        Admin Panel
+                      </Link>
+                    )}
                     <button className="w-full px-4 py-3 bg-transparent border-none text-[#FF6B35] text-sm text-left cursor-pointer transition-all duration-200 hover:bg-[#FF6B35]/10" onClick={handleLogout}>Logout</button>
                   </div>
                 )}
@@ -225,28 +233,44 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/login" className="text-[#8E8E93] bg-transparent border border-[#3A3A3C] px-4 py-2 rounded-md font-medium transition-all duration-200 hover:text-white hover:border-[#FF6B35] hover:bg-[#2C2C2E] no-underline inline-block">
-                Login
-              </Link>
-              <Link to="/register" className="gradient-orange text-white border-none px-5 py-2 rounded-md font-semibold transition-all duration-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md no-underline inline-block">
-                Sign Up
-              </Link>
+              {isLoginPage ? (
+                <Link to="/register" className="gradient-orange text-white border-none px-5 py-2 rounded-md font-semibold transition-all duration-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md no-underline inline-block">
+                  Sign Up
+                </Link>
+              ) : isSignupPage ? (
+                <Link to="/login" className="text-[#8E8E93] bg-transparent border border-[#3A3A3C] px-4 py-2 rounded-md font-medium transition-all duration-200 hover:text-white hover:border-[#FF6B35] hover:bg-[#2C2C2E] no-underline inline-block">
+                  Login
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" className="text-[#8E8E93] bg-transparent border border-[#3A3A3C] px-4 py-2 rounded-md font-medium transition-all duration-200 hover:text-white hover:border-[#FF6B35] hover:bg-[#2C2C2E] no-underline inline-block">
+                    Login
+                  </Link>
+                  <Link to="/register" className="gradient-orange text-white border-none px-5 py-2 rounded-md font-semibold transition-all duration-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md no-underline inline-block">
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </>
           )}
         </div>
       </div>
-      
+
       {/* Mobile Menu */}
       {showMobileMenu && (
         <div className="md:hidden bg-[#1C1C1E] border-t border-[#3A3A3C] px-4 py-4">
           {/* Mobile Navigation */}
           <nav className="space-y-2">
-            <Link to="/questions" className="block text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
-              Questions
-            </Link>
-            <Link to="/tags" className="block text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
-              Tags
-            </Link>
+            {!isHomePage && !isAuthPage && (
+              <Link to="/questions" className="block text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
+                Questions
+              </Link>
+            )}
+            {isLoggedIn && (
+              <Link to="/profile" className="block text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
+                Profile
+              </Link>
+            )}
             {user?.role === 'admin' && (
               <Link to="/admin" className="block text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
                 Admin Panel
@@ -258,12 +282,24 @@ const Navbar = () => {
               </button>
             ) : (
               <>
-                <Link to="/login" className="block text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
-                  Login
-                </Link>
-                <Link to="/register" className="block gradient-orange text-white px-4 py-2 rounded-md font-semibold shadow-sm transition-all duration-200">
-                  Sign Up
-                </Link>
+                {isLoginPage ? (
+                  <Link to="/register" className="block gradient-orange text-white px-4 py-2 rounded-md font-semibold shadow-sm transition-all duration-200">
+                    Sign Up
+                  </Link>
+                ) : isSignupPage ? (
+                  <Link to="/login" className="block text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
+                    Login
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/login" className="block text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E] px-3 py-2 rounded-md font-medium transition-all duration-200">
+                      Login
+                    </Link>
+                    <Link to="/register" className="block gradient-orange text-white px-4 py-2 rounded-md font-semibold shadow-sm transition-all duration-200">
+                      Sign Up
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </nav>
