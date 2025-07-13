@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import SEO from '../components/SEO';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -37,7 +38,13 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0C0C0C] to-[#1C1C1E] flex items-center justify-center p-5">
+    <>
+      <SEO 
+        title="Join StackIT - Create Your Free Developer Community Account"
+        description="Sign up for StackIT and join thousands of developers sharing knowledge. Create your free account to ask questions, provide answers, and grow your programming skills."
+        keywords="sign up, register, create account, join community, developer registration, programming community, free account, StackIT registration"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-[#0C0C0C] to-[#1C1C1E] flex items-center justify-center p-5">
       <div className="bg-[#1C1C1E] rounded-2xl p-12 w-full max-w-md shadow-2xl border border-[#3A3A3C] animate-[slideUp_0.8s_cubic-bezier(0.25,0.46,0.45,0.94)]">
         <div className="text-center mb-8 animate-[fadeInDown_0.8s_ease-out_0.2s_both]">
           <h1 className="text-3xl font-bold text-white mb-2 text-gradient">Join StackIT</h1>
@@ -124,7 +131,8 @@ const Register = () => {
           <p>Already have an account? <a href="/login" className="text-[#FF6B35] no-underline transition-all duration-200 hover:text-[#F7931E] hover:-translate-y-0.5">Sign in</a></p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

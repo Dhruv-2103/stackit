@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /questions
+Allow: /login
+Allow: /register
+
+Disallow: /admin
+Disallow: /profile
+
+Sitemap: https://odoo.dhruv210.in/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Search, Filter, ArrowUpDown, ChevronUp, ChevronDown, Eye, MessageSquare, Check, Tags, Plus } from 'lucide-react'
 import useQuestionStore from '../store/questionStore'
 import useAuthStore from '../store/authStore'
+import SEO from '../components/SEO'
 
 const Questions = () => {
   const [selectedTags, setSelectedTags] = useState([])
@@ -133,7 +134,13 @@ const Questions = () => {
   const currentQuestions = sortedQuestions.slice(startIndex, endIndex)
 
   return (
-    <div className="min-h-screen bg-[#0C0C0C] pt-4 md:pt-6">
+    <>
+      <SEO 
+        title="Programming Questions & Answers - StackIT Developer Community"
+        description="Browse thousands of programming questions and expert answers on StackIT. Find solutions for React, JavaScript, Python, CSS, databases, and more. Join our developer community today."
+        keywords="programming questions, coding answers, React help, JavaScript solutions, Python support, CSS problems, database queries, developer forum, tech support, coding community"
+      />
+      <div className="min-h-screen bg-[#0C0C0C] pt-4 md:pt-6">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
           {/* Sidebar Tags */}
@@ -537,7 +544,8 @@ const Questions = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 

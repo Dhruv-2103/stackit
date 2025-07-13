@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 const Home = () => {
   const [statsVisible, setStatsVisible] = useState(false);
@@ -118,7 +119,13 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-animated animate-gradient text-white relative overflow-hidden">
+    <>
+      <SEO 
+        title="StackIT - Community Q&A Platform for Developers | Ask, Learn, Grow"
+        description="Join StackIT's vibrant community of 5K+ developers and learners. Ask programming questions, share knowledge, and get expert answers on React, JavaScript, Python, and more. Free Q&A platform."
+        keywords="programming questions, developer community, coding help, React questions, JavaScript help, Python support, tech Q&A, Stack Overflow alternative, programming forum, coding community, developer support"
+      />
+      <div className="min-h-screen bg-gradient-animated animate-gradient text-white relative overflow-hidden">
 
 
 
@@ -291,7 +298,8 @@ const Home = () => {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 };
 
