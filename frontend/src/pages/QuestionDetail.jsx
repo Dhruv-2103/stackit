@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ChevronUp, ChevronDown, Eye, MessageSquare, Check, Calendar, Clock, LogIn } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ChevronUp, ChevronDown, Eye, MessageSquare, Check, Calendar, Clock, LogIn, AlertTriangle } from 'lucide-react'
 import { useToast } from '../components/ToastProvider'
 import { Editor } from '@tinymce/tinymce-react'
 import useQuestionStore from '../store/questionStore'
@@ -23,125 +23,15 @@ const QuestionDetail = () => {
   const [answers, setAnswers] = useState([])
   const [newAnswer, setNewAnswer] = useState('')
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isError, setIsError] = useState(false)
   const [loginConfirm, setLoginConfirm] = useState({ show: false, action: '' })
+  const navigate = useNavigate()
 
   const { getQuestion, upvoteQuestion, downvoteQuestion, createAnswer } = useQuestionStore()
   const { user } = useAuthStore()
   const toast = useToast()
 
-  // Mock question data
-  const mockQuestion = {
-    id: 1,
-    title: "How to implement authentication in React?",
-    description: `I'm building a React application and need to implement user authentication. I want to handle login, logout, and protect certain routes from unauthorized access.
 
-What are the best practices for implementing authentication in React? Should I use Context API, Redux, or some other state management solution?
-
-Here's what I've tried so far:
-
-\`\`\`javascript
-const AuthContext = createContext()
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  
-  const login = async (email, password) => {
-    // Login logic here
-  }
-  
-  return (
-    <AuthContext.Provider value={{ user, login }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-\`\`\`
-
-But I'm not sure if this is the right approach. Any suggestions?`,
-    author: "john_dev",
-    authorAvatar: "JD",
-    votes: 15,
-    answers: 3,
-    views: 234,
-    tags: ["react", "authentication", "javascript"],
-    askedDate: "today",
-    modifiedDate: "today",
-    hasAcceptedAnswer: true
-  }
-
-  const mockAnswers = [
-    {
-      id: 1,
-      content: `<p>For React authentication, I recommend using a combination of Context API and JWT tokens. Here's a robust approach:</p>
-
-<h2>1. Create an Auth Context</h2>
-
-<pre><code class="language-javascript">import React, { createContext, useContext, useState, useEffect } from 'react'
-
-const AuthContext = createContext()
-
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      // Verify token and set user
-      verifyToken(token)
-    }
-    setLoading(false)
-  }, [])
-
-  const login = async (email, password) => {
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
-      
-      const data = await response.json()
-      
-      if (data.token) {
-        localStorage.setItem('token', data.token)
-        setUser(data.user)
-        return { success: true }
-      }
-    } catch (error) {
-      return { success: false, error: error.message }
-    }
-  }
-
-  const logout = () => {
-    localStorage.removeItem('token')
-    setUser(null)
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-</code></pre>
-
-<p><strong>This approach gives you a clean, scalable authentication system.</strong></p>`,
-      author: "react_expert",
-      authorAvatar: "RE",
-      votes: 12,
-      createdAt: "2024-01-15T10:30:00Z",
-      isAccepted: true
-    }
-  ]
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -150,22 +40,22 @@ export const AuthProvider = ({ children }) => {
         if (result.success) {
           setQuestion(result.data)
           setAnswers(result.data.answers || [])
+          setIsError(false)
         } else {
-          // Fallback to mock data if question not found
-          setQuestion(mockQuestion)
-          setAnswers(mockAnswers)
+          setIsError(true)
+          toast.error(result.error || 'Question not found')
         }
       } catch (error) {
         console.error('Error fetching question:', error)
-        // Fallback to mock data on error
-        setQuestion(mockQuestion)
-        setAnswers(mockAnswers)
+        setIsError(true)
+        toast.error('Failed to load question. Please try again later.')
+      } finally {
+        setIsLoaded(true)
       }
-      setIsLoaded(true)
     }
 
     fetchQuestion()
-  }, [id, getQuestion])
+  }, [id, getQuestion, toast])
 
   useEffect(() => {
     // Highlight code blocks after content loads
@@ -249,9 +139,25 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  if (!question) return (
+  if (!isLoaded) return (
     <div className="min-h-screen bg-[#0C0C0C] flex items-center justify-center">
-      <div className="text-white">Loading...</div>
+      <div className="text-white text-lg">Loading...</div>
+    </div>
+  )
+  
+  if (isError || !question) return (
+    <div className="min-h-screen bg-[#0C0C0C] flex items-center justify-center">
+      <div className="bg-[#1C1C1E] rounded-lg p-8 max-w-md text-center">
+        <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-white mb-2">Question Not Found</h2>
+        <p className="text-[#8E8E93] mb-6">The question you're looking for doesn't exist or couldn't be loaded.</p>
+        <button 
+          onClick={() => navigate('/questions')} 
+          className="bg-[#007AFF] hover:bg-[#0056CC] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+        >
+          Back to Questions
+        </button>
+      </div>
     </div>
   )
 
