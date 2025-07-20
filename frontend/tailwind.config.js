@@ -9,7 +9,16 @@ export default {
         'accent': '#3795BD',
         'light': '#F7F7F8',
         'dark-bg': '#2D1B69'
-      }
+      },
+      animation: {
+        'fadeIn': 'fadeIn 0.3s ease-out forwards',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
     },
   },
   plugins: [],

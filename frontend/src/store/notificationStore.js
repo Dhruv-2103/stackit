@@ -65,6 +65,20 @@ const useNotificationStore = create((set, get) => ({
     }
   },
 
+  // Clear all notifications
+  clearAllNotifications: async () => {
+    try {
+      await axios.delete(`${API_URL}/clear-all`);
+      
+      // Update local state
+      set({ notifications: [], unreadCount: 0 });
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to clear notifications';
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Clear error
   clearError: () => set({ error: null }),
 }));

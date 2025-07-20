@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import SEO from '../components/SEO';
 
@@ -11,6 +11,17 @@ const Login = () => {
 
   const { login, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [redirectPath, setRedirectPath] = useState('/questions');
+  
+  useEffect(() => {
+    // Check if there's a redirect parameter in the URL
+    const searchParams = new URLSearchParams(location.search);
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      setRedirectPath(`/${redirect}`);
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     clearError();
@@ -24,7 +35,7 @@ const Login = () => {
     e.preventDefault();
     const result = await login(formData.email, formData.password);
     if (result.success) {
-      navigate('/questions');
+      navigate(redirectPath);
     }
   };
 

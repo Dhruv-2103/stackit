@@ -1,9 +1,9 @@
 User-agent: *
 Allow: /
 Allow: /questions
-Allow: /login
-Allow: /register
 
+Disallow: /login
+Disallow: /register
 Disallow: /admin
 Disallow: /profile
 

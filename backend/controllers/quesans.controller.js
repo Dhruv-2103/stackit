@@ -115,7 +115,15 @@ export const getQuestions = async (req, res) => {
 export const getQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-    const question = await Question.findById(id).populate('author').populate('answers');
+    const question = await Question.findById(id)
+      .populate('author')
+      .populate({
+        path: 'answers',
+        populate: {
+          path: 'author',
+          select: 'name _id'
+        }
+      });
     if (!question) {
       return res.status(404).json({ message: 'Question not found' });
     }

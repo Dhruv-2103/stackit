@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Questions from './pages/Questions';
 import QuestionDetail from './pages/QuestionDetail';
+import AskQuestion from './pages/AskQuestion';
 import AdminPanel from './pages/AdminPanel';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/questions" element={<Questions />} />
         <Route path="/questions/:id" element={<QuestionDetail />} />
+        <Route path="/ask" element={<AskQuestion />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/login" element={<Login />} />

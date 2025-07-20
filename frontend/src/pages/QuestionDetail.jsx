@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ChevronUp, ChevronDown, Eye, MessageSquare, Check, Calendar, Clock } from 'lucide-react'
+import { ChevronUp, ChevronDown, Eye, MessageSquare, Check, Calendar, Clock, LogIn } from 'lucide-react'
+import { useToast } from '../components/ToastProvider'
 import { Editor } from '@tinymce/tinymce-react'
 import useQuestionStore from '../store/questionStore'
 import useAuthStore from '../store/authStore'
+import { formatHtmlContent } from '../utils/formatUtils'
 import Prism from 'prismjs'
+import Confirm from '../components/Confirm'
 import 'prismjs/themes/prism-tomorrow.css'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/components/prism-jsx'
@@ -20,9 +23,11 @@ const QuestionDetail = () => {
   const [answers, setAnswers] = useState([])
   const [newAnswer, setNewAnswer] = useState('')
   const [isLoaded, setIsLoaded] = useState(false)
-  
+  const [loginConfirm, setLoginConfirm] = useState({ show: false, action: '' })
+
   const { getQuestion, upvoteQuestion, downvoteQuestion, createAnswer } = useQuestionStore()
   const { user } = useAuthStore()
+  const toast = useToast()
 
   // Mock question data
   const mockQuestion = {
@@ -158,17 +163,30 @@ export const AuthProvider = ({ children }) => {
       }
       setIsLoaded(true)
     }
-    
+
     fetchQuestion()
   }, [id, getQuestion])
 
   useEffect(() => {
     // Highlight code blocks after content loads
-    Prism.highlightAll()
-  }, [question, answers])
+    if (isLoaded) {
+      setTimeout(() => {
+        try {
+          Prism.highlightAll()
+        } catch (error) {
+          console.error('Error highlighting code:', error)
+        }
+      }, 200) // Slightly longer delay to ensure DOM is fully updated
+    }
+  }, [question, answers, isLoaded])
 
   const formatContent = (content) => {
-    // Convert markdown-style code blocks to HTML with Prism classes
+    // If content is already HTML (from TinyMCE), return it directly
+    if (content && (content.includes('<p>') || content.includes('<h1>') || content.includes('<ul>') || content.includes('<pre>'))) {
+      return formatHtmlContent(content);
+    }
+
+    // Otherwise, convert markdown-style code blocks to HTML with Prism classes
     return content
       .replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
         const language = lang || 'javascript'
@@ -180,10 +198,10 @@ export const AuthProvider = ({ children }) => {
 
   const handleVote = async (type, targetType, targetId) => {
     if (!user) {
-      alert('Please login to vote')
+      setLoginConfirm({ show: true, action: 'vote' })
       return
     }
-    
+
     try {
       if (targetType === 'question') {
         if (type === 'up') {
@@ -193,20 +211,24 @@ export const AuthProvider = ({ children }) => {
         }
         // Refresh question data
         const result = await getQuestion(id)
-        if (result.success) setQuestion(result.data)
+        if (result.success) {
+          setQuestion(result.data)
+          toast.success(type === 'up' ? 'Upvoted successfully!' : 'Downvoted successfully!')
+        }
       }
     } catch (error) {
       console.error('Error voting:', error)
+      toast.error('Failed to register your vote. Please try again.')
     }
   }
 
   const handleSubmitAnswer = async () => {
     if (!newAnswer.trim()) return
     if (!user) {
-      alert('Please login to answer')
+      setLoginConfirm({ show: true, action: 'answer' })
       return
     }
-    
+
     try {
       const result = await createAnswer(id, newAnswer)
       if (result.success) {
@@ -217,13 +239,13 @@ export const AuthProvider = ({ children }) => {
           setQuestion(updatedResult.data)
           setAnswers(updatedResult.data.answers || [])
         }
-        // Don't show alert, just refresh the page content
+        toast.success('Your answer has been posted successfully!')
       } else {
-        alert(result.error || 'Failed to submit answer')
+        toast.error(result.error || 'Failed to submit answer')
       }
     } catch (error) {
       console.error('Error submitting answer:', error)
-      alert('Failed to submit answer. Please try again.')
+      toast.error('Failed to submit answer. Please try again.')
     }
   }
 
@@ -237,7 +259,7 @@ export const AuthProvider = ({ children }) => {
     <div className="min-h-screen bg-[#0C0C0C] pt-4 md:pt-6">
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className={`transform transition-all duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-          
+
           {/* Breadcrumb */}
           <div className="mb-4">
             <Link to="/questions" className="text-[#007AFF] hover:underline">
@@ -250,7 +272,7 @@ export const AuthProvider = ({ children }) => {
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">
               {question.title}
             </h1>
-            
+
             <div className="flex flex-wrap items-center gap-4 text-sm text-[#8E8E93] mb-4">
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
@@ -265,7 +287,7 @@ export const AuthProvider = ({ children }) => {
                 <span>Viewed {question.views} times</span>
               </div>
             </div>
-            
+
             <hr className="border-[#2C2C2E]" />
           </div>
 
@@ -273,20 +295,20 @@ export const AuthProvider = ({ children }) => {
           <div className="flex gap-6 mb-8">
             {/* Vote Section */}
             <div className="flex flex-col items-center gap-2 min-w-[60px]">
-              <button 
+              <button
                 onClick={() => handleVote('up', 'question', question.id)}
                 className="p-3 rounded-full hover:bg-[#2C2C2E] transition-colors group"
               >
                 <ChevronUp className="w-10 h-10 text-[#8E8E93] group-hover:text-[#34C759]" />
               </button>
-              
+
               <span className="text-3xl font-bold text-white">
-                {typeof question.votes === 'object' && question.votes !== null 
+                {typeof question.votes === 'object' && question.votes !== null
                   ? (question.votes.upvotes?.length || 0) - (question.votes.downvotes?.length || 0)
                   : question.votes || 0}
               </span>
-              
-              <button 
+
+              <button
                 onClick={() => handleVote('down', 'question', question.id)}
                 className="p-3 rounded-full hover:bg-[#2C2C2E] transition-colors group"
               >
@@ -297,12 +319,12 @@ export const AuthProvider = ({ children }) => {
             {/* Question Description */}
             <div className="flex-1">
               <div className="bg-[#1C1C1E] rounded-lg p-6 mb-4">
-                <div 
-                  className="text-white leading-relaxed prose prose-invert max-w-none"
+                <div
+                  className="content-container text-white leading-relaxed code-highlight"
                   dangerouslySetInnerHTML={{ __html: formatContent(question.description) }}
                 />
               </div>
-              
+
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {question.tags.map(tag => (
@@ -314,20 +336,20 @@ export const AuthProvider = ({ children }) => {
                   </span>
                 ))}
               </div>
-              
+
               {/* Author Info */}
               <div className="flex justify-end">
                 <div className="bg-[#1C1C1E] rounded-lg p-3 text-sm">
                   <div className="text-[#8E8E93] mb-1">
-                asked {question.createdAt ? new Date(question.createdAt).toLocaleDateString() : question.askedDate}
-              </div>
+                    asked {question.createdAt ? new Date(question.createdAt).toLocaleDateString() : question.askedDate}
+                  </div>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-gradient-orange rounded-full flex items-center justify-center text-white font-semibold text-xs">
                       {question.authorAvatar}
                     </div>
-                    <span className="text-[#007AFF] hover:underline cursor-pointer">
-                  {question.author?.name || question.author}
-                </span>
+                    <Link to={`/user/${question.author?._id || question.authorId}`} className="text-[#007AFF] hover:underline cursor-pointer">
+                      {question.author?.name || question.authorName || question.author || 'Anonymous'}
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -345,26 +367,26 @@ export const AuthProvider = ({ children }) => {
               <div key={answer._id || answer.id || index} className={`flex gap-6 mb-6 ${index !== answers.length - 1 ? 'border-b border-[#2C2C2E] pb-6' : ''}`}>
                 {/* Vote Section */}
                 <div className="flex flex-col items-center gap-2 min-w-[60px]">
-                  <button 
+                  <button
                     onClick={() => handleVote('up', 'answer', answer.id)}
                     className="p-2 rounded-full hover:bg-[#2C2C2E] transition-colors group"
                   >
                     <ChevronUp className="w-8 h-8 text-[#8E8E93] group-hover:text-[#34C759]" />
                   </button>
-                  
+
                   <span className="text-2xl font-bold text-white">
-                    {typeof answer.votes === 'object' && answer.votes !== null 
+                    {typeof answer.votes === 'object' && answer.votes !== null
                       ? (answer.votes.upvotes?.length || 0) - (answer.votes.downvotes?.length || 0)
                       : answer.votes || 0}
                   </span>
-                  
-                  <button 
+
+                  <button
                     onClick={() => handleVote('down', 'answer', answer.id)}
                     className="p-2 rounded-full hover:bg-[#2C2C2E] transition-colors group"
                   >
                     <ChevronDown className="w-8 h-8 text-[#8E8E93] group-hover:text-[#FF3B30]" />
                   </button>
-                  
+
                   {answer.isAccepted && (
                     <Check className="w-8 h-8 text-[#34C759] mt-2" />
                   )}
@@ -373,12 +395,12 @@ export const AuthProvider = ({ children }) => {
                 {/* Answer Content */}
                 <div className="flex-1">
                   <div className="bg-[#1C1C1E] rounded-lg p-6 mb-4">
-                    <div 
-                      className="text-white leading-relaxed prose prose-invert max-w-none"
+                    <div
+                      className="content-container text-white leading-relaxed code-highlight"
                       dangerouslySetInnerHTML={{ __html: answer.content }}
                     />
                   </div>
-                  
+
                   {/* Answer Author Info */}
                   <div className="flex justify-end">
                     <div className="bg-[#1C1C1E] rounded-lg p-3 text-sm">
@@ -389,9 +411,9 @@ export const AuthProvider = ({ children }) => {
                         <div className="w-8 h-8 bg-gradient-orange rounded-full flex items-center justify-center text-white font-semibold text-xs">
                           {answer.author?.name?.charAt(0).toUpperCase() || answer.authorAvatar || 'A'}
                         </div>
-                        <span className="text-[#007AFF] hover:underline cursor-pointer">
-                          {answer.author?.name || answer.author || 'Anonymous'}
-                        </span>
+                        <Link to={`/user/${answer.author?._id || answer.authorId}`} className="text-[#007AFF] hover:underline cursor-pointer">
+                          {answer.author?.name || answer.authorName || 'Anonymous'}
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -403,7 +425,7 @@ export const AuthProvider = ({ children }) => {
           {/* Answer Form */}
           <div className="bg-[#1C1C1E] rounded-lg p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Your Answer</h3>
-            
+
             {user ? (
               <>
                 <div className="mb-4">
@@ -427,13 +449,63 @@ export const AuthProvider = ({ children }) => {
                           color: #ffffff; 
                           line-height: 1.6;
                         }
-                        h1, h2, h3 { 
-                          color: #ffffff; 
-                          margin-top: 1.5em; 
-                          margin-bottom: 0.5em; 
+                        h1 { 
+                          font-size: 1.875rem; 
+                          font-weight: 700; 
+                          color: #FF6B35; 
+                          margin-top: 1.5rem; 
+                          margin-bottom: 1rem; 
                         }
-                        h1 { font-size: 1.8em; }
-                        h2 { font-size: 1.5em; }
+                        h2 { 
+                          font-size: 1.5rem; 
+                          font-weight: 600; 
+                          color: #FF9F0A; 
+                          margin-top: 1.25rem; 
+                          margin-bottom: 0.75rem; 
+                        }
+                        h3 { 
+                          font-size: 1.25rem; 
+                          font-weight: 500; 
+                          color: #5AC8FA; 
+                          margin-top: 1rem; 
+                          margin-bottom: 0.5rem; 
+                        }
+                        p { 
+                          margin-top: 1rem; 
+                          margin-bottom: 1rem; 
+                        }
+                        ul { 
+                          list-style-type: disc; 
+                          padding-left: 1.25rem; 
+                          margin-top: 1rem; 
+                          margin-bottom: 1rem; 
+                        }
+                        ol { 
+                          list-style-type: decimal; 
+                          padding-left: 1.25rem; 
+                          margin-top: 1rem; 
+                          margin-bottom: 1rem; 
+                        }
+                        li { 
+                          margin-top: 0.25rem; 
+                          margin-bottom: 0.25rem; 
+                        }
+                        pre { 
+                          background-color: #2C2C2E; 
+                          border: 1px solid #3A3A3C; 
+                          border-radius: 0.375rem; 
+                          padding: 1rem; 
+                          margin-top: 1rem; 
+                          margin-bottom: 1rem; 
+                          overflow-x: auto; 
+                        }
+                        code { 
+                          background-color: #2C2C2E; 
+                          color: #FF9F0A; 
+                          padding: 0.125rem 0.375rem; 
+                          border-radius: 0.25rem; 
+                          font-family: monospace; 
+                        } { font-size: 1.5em; }
                         h3 { font-size: 1.2em; }
                         pre { 
                           background-color: #2C2C2E; 
@@ -458,7 +530,7 @@ export const AuthProvider = ({ children }) => {
                     }}
                   />
                 </div>
-                
+
                 <button
                   onClick={handleSubmitAnswer}
                   disabled={!newAnswer.trim()}
@@ -477,14 +549,14 @@ export const AuthProvider = ({ children }) => {
                   </p>
                 </div>
                 <div className="flex gap-3 justify-center">
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="bg-[#007AFF] hover:bg-[#0056CC] text-white px-6 py-3 rounded-lg font-medium transition-colors no-underline"
                   >
                     Sign In
                   </Link>
-                  <Link 
-                    to="/register" 
+                  <Link
+                    to="/register"
                     className="bg-transparent border border-[#007AFF] text-[#007AFF] hover:bg-[#007AFF] hover:text-white px-6 py-3 rounded-lg font-medium transition-colors no-underline"
                   >
                     Sign Up
@@ -495,6 +567,21 @@ export const AuthProvider = ({ children }) => {
           </div>
         </div>
       </div>
+
+      {/* Login Confirmation */}
+      <Confirm
+        isOpen={loginConfirm.show}
+        onClose={() => setLoginConfirm({ ...loginConfirm, show: false })}
+        onConfirm={() => {
+          setLoginConfirm({ ...loginConfirm, show: false })
+          window.location.href = '/login'
+        }}
+        title="Sign In Required"
+        type="info"
+        message={`Please sign in to ${loginConfirm.action === 'vote' ? 'vote on questions and answers' : 'post an answer'}.`}
+        confirmText="Sign In"
+        cancelText="Cancel"
+      />
     </div>
   )
 }

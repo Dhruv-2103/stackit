@@ -7,6 +7,7 @@ import { connectDB } from "./lib/db.js";
 import quesansRoutes from "./auth/quesans.routes.js";
 import adminRoutes from "./auth/admin.routes.js";
 import notificationRoutes from "./auth/notification.routes.js";
+import userRoutes from "./auth/user.routes.js";
 
 dotenv.config();
 const app = express();
@@ -26,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/quesans", quesansRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/users", userRoutes);
 
 
 

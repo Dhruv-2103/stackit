@@ -13,7 +13,7 @@ const Navbar = () => {
 
   const { user, logout } = useAuthStore();
   const { setSearchQuery } = useQuestionStore();
-  const { notifications, unreadCount, getNotifications, markAsRead, markAllAsRead } = useNotificationStore();
+  const { notifications, unreadCount, getNotifications, markAsRead, markAllAsRead, clearAllNotifications } = useNotificationStore();
   const navigate = useNavigate();
   const location = useLocation();
   const isLoggedIn = !!user;
@@ -169,14 +169,24 @@ const Navbar = () => {
                   <div className="absolute top-full right-0 mt-2 bg-[#1C1C1E] border border-[#3A3A3C] rounded-lg shadow-2xl w-80 z-50 overflow-hidden">
                     <div className="px-4 py-4 bg-[#2C2C2E] border-b border-[#3A3A3C] flex justify-between items-center">
                       <h4 className="text-white font-semibold m-0">Notifications</h4>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={markAllAsRead}
-                          className="text-[#007AFF] text-xs hover:underline"
-                        >
-                          Mark all read
-                        </button>
-                      )}
+                      <div className="flex gap-2">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="bg-[#007AFF] text-white text-xs px-2 py-1 rounded-md hover:bg-[#0056CC] transition-colors"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={clearAllNotifications}
+                            className="bg-[#2C2C2E] border border-[#3A3A3C] text-[#8E8E93] text-xs px-2 py-1 rounded-md hover:bg-[#3A3A3C] hover:text-white transition-colors"
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="max-h-72 overflow-y-auto">
                       {notifications.length > 0 ? notifications.map(notification => (
