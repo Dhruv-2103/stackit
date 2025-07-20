@@ -9,7 +9,7 @@ export const createQuestion = async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    
+
     const { title, description, tags } = req.body;
     const question = new Question({
       title,
@@ -18,9 +18,9 @@ export const createQuestion = async (req, res) => {
       author: req.user._id,
     });
     await question.save();
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Question created successfully',
-      questionId: question._id 
+      questionId: question._id
     });
   } catch (error) {
     console.log(error);
@@ -64,7 +64,7 @@ export const createAnswer = async (req, res) => {
     await answer.save();
     question.answers.push(answer._id);
     await question.save();
-    
+
     // Create notification for question author
     await createNotification(
       question.author,
@@ -74,7 +74,7 @@ export const createAnswer = async (req, res) => {
       question._id,
       answer._id
     );
-    
+
     res.status(201).json({ message: 'Answer created successfully' });
   } catch (error) {
     console.log(error);
@@ -158,12 +158,18 @@ export const getTags = async (req, res) => {
 export const upvoteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Validate ObjectId
+    if (!id || id === 'undefined' || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid question ID' });
+    }
+
     const question = await Question.findById(id);
     if (!question) {
       return res.status(404).json({ message: 'Question not found' });
     }
     const user = await User.findById(req.user._id);
-    
+
     // Check if already upvoted
     if (user.upvotedQuestions.includes(question._id)) {
       // Remove upvote
@@ -179,7 +185,7 @@ export const upvoteQuestion = async (req, res) => {
       question.votes.upvotes.push(user._id);
       user.upvotedQuestions.push(question._id);
     }
-    
+
     await question.save();
     await user.save();
     res.json({ message: 'Vote updated successfully' });
@@ -194,12 +200,18 @@ export const upvoteQuestion = async (req, res) => {
 export const downvoteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Validate ObjectId
+    if (!id || id === 'undefined' || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid question ID' });
+    }
+
     const question = await Question.findById(id);
     if (!question) {
       return res.status(404).json({ message: 'Question not found' });
     }
     const user = await User.findById(req.user._id);
-    
+
     // Check if already downvoted
     if (user.downvotedQuestions.includes(question._id)) {
       // Remove downvote
@@ -215,7 +227,7 @@ export const downvoteQuestion = async (req, res) => {
       question.votes.downvotes.push(user._id);
       user.downvotedQuestions.push(question._id);
     }
-    
+
     await question.save();
     await user.save();
     res.json({ message: 'Vote updated successfully' });
@@ -229,12 +241,18 @@ export const downvoteQuestion = async (req, res) => {
 export const upvoteAnswer = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Validate ObjectId
+    if (!id || id === 'undefined' || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid answer ID' });
+    }
+
     const answer = await Answer.findById(id);
     if (!answer) {
       return res.status(404).json({ message: 'Answer not found' });
     }
     const user = await User.findById(req.user._id);
-    
+
     // Check if already upvoted
     if (user.upvotedAnswers.includes(answer._id)) {
       // Remove upvote
@@ -250,7 +268,7 @@ export const upvoteAnswer = async (req, res) => {
       answer.votes.upvotes.push(user._id);
       user.upvotedAnswers.push(answer._id);
     }
-    
+
     await answer.save();
     await user.save();
     res.json({ message: 'Vote updated successfully' });
@@ -264,12 +282,18 @@ export const upvoteAnswer = async (req, res) => {
 export const downvoteAnswer = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Validate ObjectId
+    if (!id || id === 'undefined' || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid answer ID' });
+    }
+
     const answer = await Answer.findById(id);
     if (!answer) {
       return res.status(404).json({ message: 'Answer not found' });
     }
     const user = await User.findById(req.user._id);
-    
+
     // Check if already downvoted
     if (user.downvotedAnswers.includes(answer._id)) {
       // Remove downvote
@@ -285,7 +309,7 @@ export const downvoteAnswer = async (req, res) => {
       answer.votes.downvotes.push(user._id);
       user.downvotedAnswers.push(answer._id);
     }
-    
+
     await answer.save();
     await user.save();
     res.json({ message: 'Vote updated successfully' });

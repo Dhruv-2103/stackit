@@ -422,7 +422,7 @@ const Questions = () => {
                     <div className="space-y-3">
                       {/* Question Title */}
                       <Link
-                        to={`/questions/${question._id || question.id}`}
+                        to={`/questions/${question._id}`}
                         className="text-[#007AFF] font-semibold text-base md:text-lg hover:underline transition-all leading-tight cursor-pointer block"
                       >
                         {question.title}
@@ -437,15 +437,17 @@ const Questions = () => {
                       <div className="flex items-center gap-3 md:gap-6 text-xs md:text-sm text-[#8E8E93] flex-wrap">
                         <div className="flex items-center gap-1 group">
                           <button
-                            onClick={() => handleVote(question._id, 'up')}
+                            onClick={() => question._id && handleVote(question._id, 'up')}
                             className="hover:text-[#34C759] transition-colors"
+                            disabled={!question._id}
                           >
                             <ChevronUp className="w-3 h-3" />
                           </button>
                           <span className="font-medium text-white">{totalVotes}</span>
                           <button
-                            onClick={() => handleVote(question._id, 'down')}
+                            onClick={() => question._id && handleVote(question._id, 'down')}
                             className="hover:text-[#FF3B30] transition-colors"
+                            disabled={!question._id}
                           >
                             <ChevronDown className="w-3 h-3" />
                           </button>
