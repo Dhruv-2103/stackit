@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ChevronUp, ChevronDown, Eye, MessageSquare, Check, Calendar, Clock, LogIn, AlertTriangle } from 'lucide-react'
+import withErrorHandling from '../utils/withErrorHandling'
 import { useToast } from '../components/ToastProvider'
 import { Editor } from '@tinymce/tinymce-react'
 import useQuestionStore from '../store/questionStore'
@@ -18,6 +19,8 @@ import 'prismjs/components/prism-java'
 import 'prismjs/components/prism-sql'
 
 const QuestionDetail = () => {
+  // Error state for component-level errors
+  const [componentError, setComponentError] = useState(null);
   const { id } = useParams()
   const [question, setQuestion] = useState(null)
   const [answers, setAnswers] = useState([])
@@ -30,8 +33,6 @@ const QuestionDetail = () => {
   const { getQuestion, upvoteQuestion, downvoteQuestion, createAnswer } = useQuestionStore()
   const { user } = useAuthStore()
   const toast = useToast()
-
-
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -48,6 +49,7 @@ const QuestionDetail = () => {
       } catch (error) {
         console.error('Error fetching question:', error)
         setIsError(true)
+        setComponentError(error)
         toast.error('Failed to load question. Please try again later.')
       } finally {
         setIsLoaded(true)
@@ -144,15 +146,21 @@ const QuestionDetail = () => {
       <div className="text-white text-lg">Loading...</div>
     </div>
   )
-  
+
+  if (componentError) {
+    // Redirect to 404 page with error details
+    navigate('/404', { state: { error: componentError } });
+    return null;
+  }
+
   if (isError || !question) return (
     <div className="min-h-screen bg-[#0C0C0C] flex items-center justify-center">
       <div className="bg-[#1C1C1E] rounded-lg p-8 max-w-md text-center">
         <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-white mb-2">Question Not Found</h2>
         <p className="text-[#8E8E93] mb-6">The question you're looking for doesn't exist or couldn't be loaded.</p>
-        <button 
-          onClick={() => navigate('/questions')} 
+        <button
+          onClick={() => navigate('/questions')}
           className="bg-[#007AFF] hover:bg-[#0056CC] text-white px-6 py-3 rounded-lg font-medium transition-colors"
         >
           Back to Questions
@@ -200,48 +208,77 @@ const QuestionDetail = () => {
           {/* Question Content */}
           <div className="flex gap-6 mb-8">
             {/* Vote Section */}
-            <div className="flex flex-col items-center gap-2 min-w-[60px]">
-              <button
-                onClick={() => handleVote('up', 'question', question.id)}
-                className="p-3 rounded-full hover:bg-[#2C2C2E] transition-colors group"
-              >
-                <ChevronUp className="w-10 h-10 text-[#8E8E93] group-hover:text-[#34C759]" />
-              </button>
+            {(() => {
+              try {
+                return (
+                  <div className="flex flex-col items-center gap-2 min-w-[60px]">
+                    <button
+                      onClick={() => handleVote('up', 'question', question.id)}
+                      className="p-3 rounded-full hover:bg-[#2C2C2E] transition-colors group"
+                    >
+                      <ChevronUp className="w-10 h-10 text-[#8E8E93] group-hover:text-[#34C759]" />
+                    </button>
 
-              <span className="text-3xl font-bold text-white">
-                {typeof question.votes === 'object' && question.votes !== null
-                  ? (question.votes.upvotes?.length || 0) - (question.votes.downvotes?.length || 0)
-                  : question.votes || 0}
-              </span>
+                    <span className="text-3xl font-bold text-white">
+                      {typeof question.votes === 'object' && question.votes !== null
+                        ? (question.votes.upvotes?.length || 0) - (question.votes.downvotes?.length || 0)
+                        : question.votes || 0}
+                    </span>
 
-              <button
-                onClick={() => handleVote('down', 'question', question.id)}
-                className="p-3 rounded-full hover:bg-[#2C2C2E] transition-colors group"
-              >
-                <ChevronDown className="w-10 h-10 text-[#8E8E93] group-hover:text-[#FF3B30]" />
-              </button>
-            </div>
+                    <button
+                      onClick={() => handleVote('down', 'question', question.id)}
+                      className="p-3 rounded-full hover:bg-[#2C2C2E] transition-colors group"
+                    >
+                      <ChevronDown className="w-10 h-10 text-[#8E8E93] group-hover:text-[#FF3B30]" />
+                    </button>
+                  </div>
+                );
+              } catch (error) {
+                console.error('Error rendering vote section:', error);
+                return (
+                  <div className="min-w-[60px] flex items-center justify-center">
+                    <div className="text-red-400">Error</div>
+                  </div>
+                );
+              }
+            })()}
 
             {/* Question Description */}
             <div className="flex-1">
-              <div className="bg-[#1C1C1E] rounded-lg p-6 mb-4">
-                <div
-                  className="content-container text-white leading-relaxed code-highlight"
-                  dangerouslySetInnerHTML={{ __html: formatContent(question.description) }}
-                />
-              </div>
+              {(() => {
+                try {
+                  return (
+                    <>
+                      <div className="bg-[#1C1C1E] rounded-lg p-6 mb-4">
+                        <div
+                          className="content-container text-white leading-relaxed code-highlight"
+                          dangerouslySetInnerHTML={{ __html: formatContent(question.description) }}
+                        />
+                      </div>
 
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {question.tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="bg-[#2C2C2E] text-[#8E8E93] px-3 py-1 rounded text-sm hover:bg-[#3C3C3E] transition-colors cursor-pointer"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {question.tags.map(tag => (
+                          <span
+                            key={tag}
+                            className="bg-[#2C2C2E] text-[#8E8E93] px-3 py-1 rounded text-sm hover:bg-[#3C3C3E] transition-colors cursor-pointer"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  );
+                } catch (error) {
+                  console.error('Error rendering question content:', error);
+                  return (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
+                      <AlertTriangle className="w-5 h-5 text-red-400 mb-2" />
+                      <p className="text-white">Error displaying question content</p>
+                    </div>
+                  );
+                }
+              })()}
 
               {/* Author Info */}
               <div className="flex justify-end">
@@ -269,72 +306,87 @@ const QuestionDetail = () => {
               {answers.length} Answer{answers.length !== 1 ? 's' : ''}
             </h2>
 
-            {answers.map((answer, index) => (
-              <div key={answer._id || answer.id || index} className={`flex gap-6 mb-6 ${index !== answers.length - 1 ? 'border-b border-[#2C2C2E] pb-6' : ''}`}>
+            {answers.map((answer, index) => {
+              try {
+                return (
+                  <div key={answer._id || answer.id || index} className={`flex gap-6 mb-6 ${index !== answers.length - 1 ? 'border-b border-[#2C2C2E] pb-6' : ''}`}>
                 {/* Vote Section */}
-                <div className="flex flex-col items-center gap-2 min-w-[60px]">
-                  <button
-                    onClick={() => handleVote('up', 'answer', answer.id)}
-                    className="p-2 rounded-full hover:bg-[#2C2C2E] transition-colors group"
-                  >
-                    <ChevronUp className="w-8 h-8 text-[#8E8E93] group-hover:text-[#34C759]" />
-                  </button>
+                    <div className="flex flex-col items-center gap-2 min-w-[60px]">
+                      <button
+                        onClick={() => handleVote('up', 'answer', answer.id)}
+                        className="p-2 rounded-full hover:bg-[#2C2C2E] transition-colors group"
+                      >
+                        <ChevronUp className="w-8 h-8 text-[#8E8E93] group-hover:text-[#34C759]" />
+                      </button>
 
-                  <span className="text-2xl font-bold text-white">
-                    {typeof answer.votes === 'object' && answer.votes !== null
-                      ? (answer.votes.upvotes?.length || 0) - (answer.votes.downvotes?.length || 0)
-                      : answer.votes || 0}
-                  </span>
+                      <span className="text-2xl font-bold text-white">
+                        {typeof answer.votes === 'object' && answer.votes !== null
+                          ? (answer.votes.upvotes?.length || 0) - (answer.votes.downvotes?.length || 0)
+                          : answer.votes || 0}
+                      </span>
 
-                  <button
-                    onClick={() => handleVote('down', 'answer', answer.id)}
-                    className="p-2 rounded-full hover:bg-[#2C2C2E] transition-colors group"
-                  >
-                    <ChevronDown className="w-8 h-8 text-[#8E8E93] group-hover:text-[#FF3B30]" />
-                  </button>
+                      <button
+                        onClick={() => handleVote('down', 'answer', answer.id)}
+                        className="p-2 rounded-full hover:bg-[#2C2C2E] transition-colors group"
+                      >
+                        <ChevronDown className="w-8 h-8 text-[#8E8E93] group-hover:text-[#FF3B30]" />
+                      </button>
 
-                  {answer.isAccepted && (
-                    <Check className="w-8 h-8 text-[#34C759] mt-2" />
-                  )}
-                </div>
+                      {answer.isAccepted && (
+                        <Check className="w-8 h-8 text-[#34C759] mt-2" />
+                      )}
+                    </div>
 
-                {/* Answer Content */}
-                <div className="flex-1">
-                  <div className="bg-[#1C1C1E] rounded-lg p-6 mb-4">
-                    <div
-                      className="content-container text-white leading-relaxed code-highlight"
-                      dangerouslySetInnerHTML={{ __html: answer.content }}
-                    />
-                  </div>
-
-                  {/* Answer Author Info */}
-                  <div className="flex justify-end">
-                    <div className="bg-[#1C1C1E] rounded-lg p-3 text-sm">
-                      <div className="text-[#8E8E93] mb-1">
-                        answered {answer.createdAt ? new Date(answer.createdAt).toLocaleDateString() : 'recently'}
+                    {/* Answer Content */}
+                    <div className="flex-1">
+                      <div className="bg-[#1C1C1E] rounded-lg p-6 mb-4">
+                        <div
+                          className="content-container text-white leading-relaxed code-highlight"
+                          dangerouslySetInnerHTML={{ __html: answer.content }}
+                        />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-orange rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                          {answer.author?.name?.charAt(0).toUpperCase() || answer.authorAvatar || 'A'}
+
+                      {/* Answer Author Info */}
+                      <div className="flex justify-end">
+                        <div className="bg-[#1C1C1E] rounded-lg p-3 text-sm">
+                          <div className="text-[#8E8E93] mb-1">
+                            answered {answer.createdAt ? new Date(answer.createdAt).toLocaleDateString() : 'recently'}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gradient-orange rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                              {answer.author?.name?.charAt(0).toUpperCase() || answer.authorAvatar || 'A'}
+                            </div>
+                            <Link to={`/user/${answer.author?._id || answer.authorId}`} className="text-[#007AFF] hover:underline cursor-pointer">
+                              {answer.author?.name || answer.authorName || 'Anonymous'}
+                            </Link>
+                          </div>
                         </div>
-                        <Link to={`/user/${answer.author?._id || answer.authorId}`} className="text-[#007AFF] hover:underline cursor-pointer">
-                          {answer.author?.name || answer.authorName || 'Anonymous'}
-                        </Link>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
+            );
+              } catch (error) {
+                console.error(`Error rendering answer ${index}:`, error);
+                return (
+                  <div key={`error-answer-${index}`} className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
+                    <AlertTriangle className="w-5 h-5 text-red-400 mb-2" />
+                    <p className="text-white">Error displaying this answer</p>
+                  </div>
+                );
+              }
+            })}
           </div>
 
           {/* Answer Form */}
-          <div className="bg-[#1C1C1E] rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Your Answer</h3>
+          {(() => {
+            try {
+              return (
+                <div className="bg-[#1C1C1E] rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Your Answer</h3>
 
-            {user ? (
-              <>
-                <div className="mb-4">
+                  {user ? (
+                    <>
+                      <div className="mb-4">
                   <Editor
                     apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
                     value={newAnswer}
@@ -435,42 +487,53 @@ const QuestionDetail = () => {
                       `
                     }}
                   />
-                </div>
+                      </div>
 
-                <button
-                  onClick={handleSubmitAnswer}
-                  disabled={!newAnswer.trim()}
-                  className="bg-[#007AFF] hover:bg-[#0056CC] disabled:bg-[#2C2C2E] disabled:text-[#8E8E93] text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Post Your Answer
-                </button>
-              </>
-            ) : (
-              <div className="bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg p-6 text-center">
-                <div className="mb-4">
-                  <MessageSquare className="w-12 h-12 text-[#8E8E93] mx-auto mb-3" />
-                  <h4 className="text-white font-semibold mb-2">Want to answer this question?</h4>
-                  <p className="text-[#8E8E93] text-sm mb-4">
-                    Sign in to share your knowledge and help the community by providing a detailed answer.
-                  </p>
-                </div>
-                <div className="flex gap-3 justify-center">
-                  <Link
-                    to="/login"
-                    className="bg-[#007AFF] hover:bg-[#0056CC] text-white px-6 py-3 rounded-lg font-medium transition-colors no-underline"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="bg-transparent border border-[#007AFF] text-[#007AFF] hover:bg-[#007AFF] hover:text-white px-6 py-3 rounded-lg font-medium transition-colors no-underline"
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              </div>
+                      <button
+                        onClick={handleSubmitAnswer}
+                        disabled={!newAnswer.trim()}
+                        className="bg-[#007AFF] hover:bg-[#0056CC] disabled:bg-[#2C2C2E] disabled:text-[#8E8E93] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                      >
+                        Post Your Answer
+                      </button>
+                    </>
+                  ) : (
+                    <div className="bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg p-6 text-center">
+                      <div className="mb-4">
+                        <MessageSquare className="w-12 h-12 text-[#8E8E93] mx-auto mb-3" />
+                        <h4 className="text-white font-semibold mb-2">Want to answer this question?</h4>
+                        <p className="text-[#8E8E93] text-sm mb-4">
+                          Sign in to share your knowledge and help the community by providing a detailed answer.
+                        </p>
+                      </div>
+                      <div className="flex gap-3 justify-center">
+                        <Link
+                          to="/login"
+                          className="bg-[#007AFF] hover:bg-[#0056CC] text-white px-6 py-3 rounded-lg font-medium transition-colors no-underline"
+                        >
+                          Sign In
+                        </Link>
+                        <Link
+                          to="/register"
+                          className="bg-transparent border border-[#007AFF] text-[#007AFF] hover:bg-[#007AFF] hover:text-white px-6 py-3 rounded-lg font-medium transition-colors no-underline"
+                        >
+                          Sign Up
+                        </Link>
+                      </div>
+                    </div>
             )}
-          </div>
+                </div>
+              );
+            } catch (error) {
+              console.error('Error rendering answer form:', error);
+              return (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
+                  <AlertTriangle className="w-5 h-5 text-red-400 mb-2" />
+                  <p className="text-white">Error displaying answer form</p>
+                </div>
+              );
+            }
+          })()}
         </div>
       </div>
 
@@ -492,4 +555,5 @@ const QuestionDetail = () => {
   )
 }
 
-export default QuestionDetail
+// Wrap component with error handling HOC
+export default withErrorHandling(QuestionDetail)
