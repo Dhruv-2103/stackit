@@ -1,10 +1,13 @@
 # 🚀 StackIT – The Minimal Q&A Platform for Modern Learners  
 *A project proudly built for the Odoo Hackathon 2025*
 
+<<<<<<< HEAD
 [![Watch Demo](https://img.youtube.com/vi/F_169x9_Ar4/0.jpg)](https://www.youtube.com/watch?v=F_169x9_Ar4)
 
 > 🎥 **Watch our Hackathon Demo Video** — click the thumbnail above or [watch on YouTube](https://www.youtube.com/watch?v=F_169x9_Ar4)
 
+=======
+>>>>>>> 7c342230d8eb21471cb092c12e52ff48e38e5818
 Welcome to **StackIT** — your clean, community-driven hub for asking questions, sharing answers, and growing together.  
 No clutter, no distractions, just the joy of collaborative learning.  
 Inspired by the best of Stack Overflow, built for communities who want less noise and more knowledge.
@@ -53,12 +56,20 @@ Whether you're a student, developer, or lifelong learner, StackIT helps you find
 |---------------|----------------------------------------|
 | **Frontend**  | React.js, React Router, Axios          |
 | **UI**        | Tailwind CSS / Material UI             |
+<<<<<<< HEAD
 | **Rich Text** | TinyMCE Editor                         |
+=======
+| **Rich Text** | React Quill / Draft.js                 |
+>>>>>>> 7c342230d8eb21471cb092c12e52ff48e38e5818
 | **Backend**   | Node.js, Express.js                    |
 | **Database**  | MongoDB, Mongoose                      |
 | **Auth**      | JSON Web Tokens (JWT)                  |
 | **Uploads**   | Multer / Cloudinary                    |
+<<<<<<< HEAD
 | **Cache**     | Redis (optional for development)       |
+=======
+| **Notify**    | Socket.io (real-time) or REST polling  |
+>>>>>>> 7c342230d8eb21471cb092c12e52ff48e38e5818
 | **Versioning**| Git & GitHub                           |
 
 ---
@@ -99,6 +110,7 @@ Whether you're a student, developer, or lifelong learner, StackIT helps you find
 
 ---
 
+<<<<<<< HEAD
 ## ⚡ Quick Start
 
 ### Option 1: Automated Setup (Windows)
@@ -148,6 +160,23 @@ npm run dev
 - **Environment**: Development mode enabled
 - **Hot Reload**: Both frontend and backend support hot reloading
 
+=======
+## ⚡ Get Started
+
+1. **Clone this repo**  
+   `git clone https://github.com/your-org/stackit.git`
+
+2. **Install dependencies**  
+   `cd stackit && npm install`
+
+3. **Run locally**  
+   `npm start`
+
+4. **Contribute & Star!** ⭐
+
+---
+
+>>>>>>> 7c342230d8eb21471cb092c12e52ff48e38e5818
 ## 🏁 Built for the Odoo Hackathon 2025
 
 We're proud to participate in the Odoo Hackathon — a place to create, collaborate, and showcase innovation.  
@@ -155,6 +184,10 @@ We're proud to participate in the Odoo Hackathon — a place to create, collabor
 
 ---
 
+<<<<<<< HEAD
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
+=======
+> *"The best way to learn is together." – The StackIT Team 💡*
+>>>>>>> 7c342230d8eb21471cb092c12e52ff48e38e5818
