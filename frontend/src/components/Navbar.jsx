@@ -32,7 +32,7 @@ const Navbar = () => {
       await markAsRead(notification._id);
     }
     if (notification.question) {
-      navigate(`/questions/${notification.question._id}`);
+      navigate(`/questions/${notification.question._id || notification.question}`);
     }
     setShowNotifications(false);
   };

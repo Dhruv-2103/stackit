@@ -14,8 +14,12 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite dev server
-  credentials: true
+  origin: process.env.NODE_ENV === 'production' 
+    ? false // Set your production domain here
+    : ['http://localhost:5173', 'http://127.0.0.1:5173'], // Vite dev server
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -34,7 +38,7 @@ app.use("/api/notifications", notificationRoutes);
 if (process.env.NODE_ENV === "production") {
 	app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
-	app.get("/{*splat}", (req, res) => {
+	app.get("*", (req, res) => {
 		res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
 	});
 }
@@ -43,4 +47,7 @@ if (process.env.NODE_ENV === "production") {
 app.listen(PORT, () => {
     console.log("Server is Running on http://localhost:" + PORT);
     connectDB();
-})
+}).on('error', (err) => {
+    console.error('Server failed to start:', err);
+    process.exit(1);
+});

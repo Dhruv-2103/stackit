@@ -52,10 +52,17 @@ export const updateQuestion = async (req, res) => {
 export const createAnswer = async (req, res) => {
   try {
     const { questionId, content } = req.body;
-    const question = await Question.findById(questionId);
+    const question = await Question.findById(questionId).populate('author');
     if (!question) {
       return res.status(404).json({ message: 'Question not found' });
     }
+    
+    // Get the current user's full details
+    const currentUser = await User.findById(req.user._id);
+    if (!currentUser) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+    
     const answer = new Answer({
       question: questionId,
       author: req.user._id,
@@ -65,19 +72,21 @@ export const createAnswer = async (req, res) => {
     question.answers.push(answer._id);
     await question.save();
     
-    // Create notification for question author
-    await createNotification(
-      question.author,
-      req.user._id,
-      'answer',
-      `${req.user.name} answered your question: "${question.title}"`,
-      question._id,
-      answer._id
-    );
+    // Create notification for question author (don't notify if answering own question)
+    if (question.author._id.toString() !== currentUser._id.toString()) {
+      await createNotification(
+        question.author._id,
+        currentUser._id,
+        'answer',
+        `${currentUser.name} answered your question: "${question.title}"`,
+        question._id,
+        answer._id
+      );
+    }
     
     res.status(201).json({ message: 'Answer created successfully' });
   } catch (error) {
-    console.log(error);
+    console.log('Error in createAnswer:', error);
     res.status(500).json({ message: 'Error creating answer in createAnswer controller' });
   }
 };
@@ -165,6 +174,15 @@ export const upvoteQuestion = async (req, res) => {
       // Add upvote
       question.votes.upvotes.push(user._id);
       user.upvotedQuestions.push(question._id);
+      
+      // Create notification for question author
+      await createNotification(
+        question.author,
+        req.user._id,
+        'upvote',
+        `${req.user.name} upvoted your question: "${question.title}"`,
+        question._id
+      );
     }
     
     await question.save();
@@ -236,6 +254,16 @@ export const upvoteAnswer = async (req, res) => {
       // Add upvote
       answer.votes.upvotes.push(user._id);
       user.upvotedAnswers.push(answer._id);
+      
+      // Create notification for answer author
+      await createNotification(
+        answer.author,
+        req.user._id,
+        'upvote',
+        `${req.user.name} upvoted your answer`,
+        answer.question,
+        answer._id
+      );
     }
     
     await answer.save();
@@ -279,5 +307,21 @@ export const downvoteAnswer = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Error downvoting answer' });
+  }
+};
+
+// GET /tags
+export const getTags = async (req, res) => {
+  try {
+    const tags = await Question.aggregate([
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags', count: { $sum: 1 } } },
+      { $project: { name: '$_id', count: 1, _id: 0 } },
+      { $sort: { count: -1 } }
+    ]);
+    res.json(tags);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Error fetching tags' });
   }
 };

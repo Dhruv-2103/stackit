@@ -53,12 +53,12 @@ Whether you're a student, developer, or lifelong learner, StackIT helps you find
 |---------------|----------------------------------------|
 | **Frontend**  | React.js, React Router, Axios          |
 | **UI**        | Tailwind CSS / Material UI             |
-| **Rich Text** | React Quill / Draft.js                 |
+| **Rich Text** | TinyMCE Editor                         |
 | **Backend**   | Node.js, Express.js                    |
 | **Database**  | MongoDB, Mongoose                      |
 | **Auth**      | JSON Web Tokens (JWT)                  |
 | **Uploads**   | Multer / Cloudinary                    |
-| **Notify**    | Socket.io (real-time) or REST polling  |
+| **Cache**     | Redis (optional for development)       |
 | **Versioning**| Git & GitHub                           |
 
 ---
@@ -99,32 +99,62 @@ Whether you're a student, developer, or lifelong learner, StackIT helps you find
 
 ---
 
-## ⚡ Get Started
+## ⚡ Quick Start
 
-1. **Clone this repo**  
-   `git clone https://github.com/Pratham2sharma/StackIT.git`
+### Option 1: Automated Setup (Windows)
+```bash
+# Run the PowerShell script
+.\start-dev.ps1
+```
 
-2. **Install dependencies**  
-   `cd stackit && npm install`
+### Option 2: Manual Setup
+```bash
+# 1. Clone the repository
+git clone https://github.com/Pratham2sharma/StackIT.git
+cd StackIT-live
 
-3. **For Front-end -> Go to "frontend" Directory and Run**
-   `npm run dev`
+# 2. Install backend dependencies
+npm install
 
-4. **For Back-end -> Go to Root Directory and Run**
-   `npm run dev`
+# 3. Install frontend dependencies
+cd frontend
+npm install
+cd ..
 
-5. **Make Sure Frontend should run on PORT - 5173**   
+# 4. Start backend server (Terminal 1)
+npm run backend
+
+# 5. Start frontend server (Terminal 2)
+cd frontend
+npm run dev
+```
+
+### 🌐 Access the Application
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:5000   
 ---
 
-## 🏁 Admin Panel Credential
+## 🔑 Default Admin Credentials
 
-1. just login with Admin credentials then press Admin Panel button in Navbar.
-2. Email: admin@example.com
-3. Password: 123456
+**Email**: `admin@example.com`  
+**Password**: `123456`
+
+*After login, click the "Admin Panel" button in the navbar to access admin features.*
+
+## 🛠️ Development Notes
+
+- **Redis**: Optional for development (disabled by default)
+- **Database**: MongoDB Atlas (configured)
+- **Environment**: Development mode enabled
+- **Hot Reload**: Both frontend and backend support hot reloading
 
 ## 🏁 Built for the Odoo Hackathon 2025
 
 We're proud to participate in the Odoo Hackathon — a place to create, collaborate, and showcase innovation.  
 **StackIT** is our attempt at building something meaningful, scalable, and community-first.
 
+---
 
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).

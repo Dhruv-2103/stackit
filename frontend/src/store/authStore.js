@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/auth';
+const API_URL = import.meta.env.PROD ? '/api/auth' : '/api/auth';
 
 // Axios interceptor to handle token refresh
 let isRefreshing = false;
@@ -138,11 +138,29 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
+  // Verify current user
+  verifyUser: async () => {
+    const token = get().token;
+    if (!token) return { success: false };
+    
+    try {
+      get().setAuthHeader(token);
+      const response = await axios.get(`${API_URL}/profile`);
+      set({ user: response.data });
+      return { success: true };
+    } catch (error) {
+      // Token is invalid, clear auth
+      set({ user: null, token: null });
+      get().setAuthHeader(null);
+      return { success: false };
+    }
+  },
+
   // Initialize auth on app start
-  initAuth: () => {
+  initAuth: async () => {
     const token = get().token;
     if (token) {
-      get().setAuthHeader(token);
+      await get().verifyUser();
       // Set up automatic token refresh every 20 hours
       setInterval(() => {
         get().refreshToken();

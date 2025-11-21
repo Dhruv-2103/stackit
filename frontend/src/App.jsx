@@ -7,6 +7,7 @@ import QuestionDetail from './pages/QuestionDetail';
 import AdminPanel from './pages/AdminPanel';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Tags from './pages/Tags';
 import useAuthStore from './store/authStore';
 import Profile from './pages/Profile';
 
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/questions" element={<Questions />} />
         <Route path="/questions/:id" element={<QuestionDetail />} />
+        <Route path="/tags" element={<Tags />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/login" element={<Login />} />

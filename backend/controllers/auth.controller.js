@@ -1,7 +1,7 @@
 
 import User from "../model/user.model.js";
 import jwt from "jsonwebtoken";
-import client from "../lib/redis.js";
+import { connectRedis } from "../lib/redis.js";
 
 const generateToken = (userId) => {
     const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
@@ -15,7 +15,14 @@ const generateToken = (userId) => {
 }
 
 const storeRefreshToken = async (userId, refreshToken) => {
-    await client.set(`refresh_token:${userId}`, refreshToken, "EX", 7 * 24 * 60 * 60);
+    try {
+        const client = await connectRedis();
+        if (client) {
+            await client.set(`refresh_token:${userId}`, refreshToken, "EX", 7 * 24 * 60 * 60);
+        }
+    } catch (error) {
+        console.warn('Redis unavailable for token storage');
+    }
 }
 
 const setCookies = (res, accessToken, refreshToken) => {
@@ -105,8 +112,15 @@ export const logout = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
         if (refreshToken) {
-            const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-            await client.del(`refresh_token:${decoded.userId}`);
+            try {
+                const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+                const client = await connectRedis();
+                if (client) {
+                    await client.del(`refresh_token:${decoded.userId}`);
+                }
+            } catch (error) {
+                console.warn('Redis unavailable for token cleanup');
+            }
         }
 
         res.clearCookie("accessToken");
@@ -132,10 +146,17 @@ export const refreshToken = async (req, res) => {
         }
 
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        const storedToken = await client.get(`refresh_token:${decoded.userId}`);
-
-        if (storedToken !== refreshToken) {
-            return res.status(401).json({ message: "Invalid refresh token" });
+        
+        try {
+            const client = await connectRedis();
+            if (client) {
+                const storedToken = await client.get(`refresh_token:${decoded.userId}`);
+                if (storedToken !== refreshToken) {
+                    return res.status(401).json({ message: "Invalid refresh token" });
+                }
+            }
+        } catch (error) {
+            console.warn('Redis unavailable for token validation, proceeding without validation');
         }
 
         const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "24h" });

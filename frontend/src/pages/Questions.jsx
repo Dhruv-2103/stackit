@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Search, Filter, ArrowUpDown, ChevronUp, ChevronDown, Eye, MessageSquare, Check, Tags, Plus } from 'lucide-react'
 import useQuestionStore from '../store/questionStore'
 import useAuthStore from '../store/authStore'
 
 const Questions = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [selectedTags, setSelectedTags] = useState([])
   const [sortBy, setSortBy] = useState('newest')
   const [filterBy, setFilterBy] = useState('all')
@@ -25,6 +26,12 @@ const Questions = () => {
     setIsLoaded(true)
     getQuestions()
     
+    // Check for tag parameter in URL
+    const tagParam = searchParams.get('tag')
+    if (tagParam && !selectedTags.includes(tagParam)) {
+      setSelectedTags([tagParam])
+    }
+    
     // Reset to first page when questions change
     setCurrentPage(1)
 
@@ -41,9 +48,18 @@ const Questions = () => {
   }, [showFilterDropdown])
 
   const toggleTag = (tag) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    )
+    setSelectedTags(prev => {
+      const newTags = prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+      
+      // Update URL parameters
+      if (newTags.length === 1) {
+        setSearchParams({ tag: newTags[0] })
+      } else {
+        setSearchParams({})
+      }
+      
+      return newTags
+    })
   }
 
   const handleCreateQuestion = async (e) => {

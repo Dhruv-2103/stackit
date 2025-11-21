@@ -1,7 +1,17 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/notifications';
+const API_URL = '/api/notifications';
+
+// Create axios instance with auth header
+const createAuthenticatedRequest = () => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : ''
+    }
+  };
+};
 
 const useNotificationStore = create((set, get) => ({
   notifications: [],
@@ -13,7 +23,7 @@ const useNotificationStore = create((set, get) => ({
   getNotifications: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(API_URL);
+      const response = await axios.get(API_URL, createAuthenticatedRequest());
       const notifications = response.data;
       const unreadCount = notifications.filter(n => !n.isRead).length;
       
@@ -24,6 +34,7 @@ const useNotificationStore = create((set, get) => ({
       });
       return { success: true };
     } catch (error) {
+      console.error('Notification fetch error:', error.response?.data || error.message);
       const errorMessage = error.response?.data?.message || 'Failed to fetch notifications';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
@@ -33,7 +44,7 @@ const useNotificationStore = create((set, get) => ({
   // Mark notification as read
   markAsRead: async (notificationId) => {
     try {
-      await axios.put(`${API_URL}/${notificationId}/read`);
+      await axios.put(`${API_URL}/${notificationId}/read`, {}, createAuthenticatedRequest());
       
       // Update local state
       const notifications = get().notifications.map(n => 
@@ -52,7 +63,7 @@ const useNotificationStore = create((set, get) => ({
   // Mark all notifications as read
   markAllAsRead: async () => {
     try {
-      await axios.put(`${API_URL}/read-all`);
+      await axios.put(`${API_URL}/read-all`, {}, createAuthenticatedRequest());
       
       // Update local state
       const notifications = get().notifications.map(n => ({ ...n, isRead: true }));

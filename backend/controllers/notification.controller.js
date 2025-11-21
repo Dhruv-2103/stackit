@@ -6,6 +6,7 @@ export const getUserNotifications = async (req, res) => {
     const notifications = await Notification.find({ recipient: req.user._id })
       .populate('sender', 'name')
       .populate('question', 'title')
+      .populate('answer')
       .sort({ createdAt: -1 })
       .limit(20);
     
