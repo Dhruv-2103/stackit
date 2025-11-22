@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Calendar, MessageSquare, Eye, ChevronUp, ChevronDown } from 'lucide-react'
 import useAuthStore from '../store/authStore'
 import useQuestionStore from '../store/questionStore'
+import { updateMetaTags, addStructuredData } from '../utils/seo'
 
 const Profile = () => {
   const { user } = useAuthStore()
@@ -14,6 +15,27 @@ const Profile = () => {
     const fetchUserQuestions = async () => {
       if (user) {
         await getQuestions()
+
+        updateMetaTags({
+          title: `${user.name}'s Profile - StackIT`,
+          description: `View ${user.name}'s profile, questions, and contributions on StackIT. See their activity and engagement in the developer community.`,
+          keywords: 'user profile, developer profile, StackIT user, questions asked, community member',
+          canonical: `${window.location.origin}/profile`
+        });
+
+        addStructuredData({
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          "mainEntity": {
+            "@type": "Person",
+            "name": user.name,
+            "email": user.email,
+            "memberOf": {
+              "@type": "Organization",
+              "name": "StackIT"
+            }
+          }
+        });
       }
       setIsLoaded(true)
     }
@@ -22,7 +44,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (questions && user) {
-      const filteredQuestions = questions.filter(q => 
+      const filteredQuestions = questions.filter(q =>
         q.author?._id === user._id || q.author === user._id
       )
       setUserQuestions(filteredQuestions)
@@ -44,7 +66,7 @@ const Profile = () => {
     <div className="min-h-screen bg-[#0C0C0C] pt-4 md:pt-6">
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         {/* Profile Header */}
-        <div className="bg-[#1C1C1E] rounded-lg p-6 mb-6">
+        <header className="bg-[#1C1C1E] rounded-lg p-6 mb-6">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-gradient-orange rounded-full flex items-center justify-center text-white font-bold text-2xl">
               {user.name?.charAt(0).toUpperCase() || 'U'}
@@ -64,7 +86,7 @@ const Profile = () => {
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
         {/* User Questions */}
         <div className="bg-[#1C1C1E] rounded-lg p-6">
@@ -78,17 +100,17 @@ const Profile = () => {
               <div className="space-y-4">
                 {userQuestions.map((question) => (
                   <div key={question._id} className="bg-[#2C2C2E] rounded-lg p-4 hover:bg-[#3C3C3E] transition-colors">
-                    <Link 
+                    <Link
                       to={`/questions/${question._id}`}
                       className="text-[#007AFF] font-semibold text-lg hover:underline block mb-2"
                     >
                       {question.title}
                     </Link>
-                    
+
                     <p className="text-[#8E8E93] text-sm mb-3 line-clamp-2">
                       {question.description?.substring(0, 150)}...
                     </p>
-                    
+
                     <div className="flex items-center gap-4 text-xs text-[#8E8E93]">
                       <div className="flex items-center gap-1">
                         <ChevronUp className="w-3 h-3" />
@@ -104,7 +126,7 @@ const Profile = () => {
                       </div>
                       <span>Asked {question.createdAt ? new Date(question.createdAt).toLocaleDateString() : 'Recently'}</span>
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-2 mt-3">
                       {question.tags?.map(tag => (
                         <span
@@ -125,7 +147,7 @@ const Profile = () => {
                 <p className="text-[#8E8E93] text-sm mb-4">
                   You haven't asked any questions yet. Start by asking your first question!
                 </p>
-                <Link 
+                <Link
                   to="/questions"
                   className="bg-[#007AFF] hover:bg-[#0056CC] text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >

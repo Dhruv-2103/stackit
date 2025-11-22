@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Search, Filter, ArrowUpDown, ChevronUp, ChevronDown, Eye, MessageSquare, Check, Tags, Plus } from 'lucide-react'
 import useQuestionStore from '../store/questionStore'
 import useAuthStore from '../store/authStore'
+import { updateMetaTags, addStructuredData } from '../utils/seo'
 
 const Questions = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -25,6 +26,23 @@ const Questions = () => {
   useEffect(() => {
     setIsLoaded(true)
     getQuestions()
+    
+    // SEO Meta Tags
+    updateMetaTags({
+      title: 'Browse Questions - StackIT | Programming Q&A Community',
+      description: 'Browse thousands of programming questions and answers on StackIT. Find solutions to React, JavaScript, Node.js, MongoDB, and more. Join our developer community today.',
+      keywords: 'programming questions, coding answers, React questions, JavaScript help, Node.js solutions, MongoDB queries, web development Q&A',
+      canonical: `${window.location.origin}/questions`
+    });
+
+    // Structured Data for CollectionPage
+    addStructuredData({
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Programming Questions",
+      "description": "Browse programming questions and answers from the StackIT community",
+      "url": `${window.location.origin}/questions`
+    });
     
     // Check for tag parameter in URL
     const tagParam = searchParams.get('tag')
@@ -188,7 +206,7 @@ const Questions = () => {
             {/* Filter and Sort Options */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 gap-3">
               <div className="flex items-center gap-4">
-                <h2 className="text-lg md:text-xl font-semibold text-white flex items-center gap-2">
+                <h1 className="text-lg md:text-xl font-semibold text-white flex items-center gap-2">
                   <MessageSquare className="text-[#007AFF] w-4 h-4 md:w-5 md:h-5" />
                   {sortedQuestions.length} Questions
                   {searchQuery && (
@@ -196,7 +214,7 @@ const Questions = () => {
                       for "{searchQuery}"
                     </span>
                   )}
-                </h2>
+                </h1>
                 {user && (
                   <button
                     onClick={() => setShowCreateForm(true)}

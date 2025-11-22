@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { updateMetaTags, addStructuredData, generateWebsiteSchema } from '../utils/seo';
 
 const Home = () => {
   const [statsVisible, setStatsVisible] = useState(false);
@@ -30,6 +31,19 @@ const Home = () => {
 
     return <span>{count}{suffix}</span>;
   };
+
+  useEffect(() => {
+    // SEO Meta Tags
+    updateMetaTags({
+      title: 'StackIT - Q&A Platform for Modern Learners | Ask Questions, Share Knowledge',
+      description: 'Join StackIT, the collaborative Q&A platform where knowledge flows freely. Ask programming questions, get expert answers, and connect with developers worldwide. Built for the Odoo Hackathon 2025.',
+      keywords: 'Q&A platform, programming questions, developer community, Stack Overflow alternative, coding help, React, Node.js, MongoDB, web development, ask questions online, learn programming',
+      canonical: window.location.origin
+    });
+
+    // Structured Data
+    addStructuredData(generateWebsiteSchema());
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

@@ -4,6 +4,7 @@ import { ChevronUp, ChevronDown, Eye, MessageSquare, Check, Calendar, Clock } fr
 import { Editor } from '@tinymce/tinymce-react'
 import useQuestionStore from '../store/questionStore'
 import useAuthStore from '../store/authStore'
+import { updateMetaTags, addStructuredData, generateQASchema } from '../utils/seo'
 import Prism from 'prismjs'
 import 'prismjs/themes/prism-tomorrow.css'
 import 'prismjs/components/prism-javascript'
@@ -145,14 +146,24 @@ export const AuthProvider = ({ children }) => {
         if (result.success) {
           setQuestion(result.data)
           setAnswers(result.data.answers || [])
+          
+          // SEO Meta Tags
+          updateMetaTags({
+            title: `${result.data.title} - StackIT Q&A`,
+            description: result.data.description.substring(0, 160).replace(/<[^>]*>/g, ''),
+            keywords: `${result.data.tags.join(', ')}, programming question, coding help`,
+            ogType: 'article',
+            canonical: `${window.location.origin}/questions/${id}`
+          });
+          
+          // Structured Data for QA
+          addStructuredData(generateQASchema(result.data, result.data.answers || []));
         } else {
-          // Fallback to mock data if question not found
           setQuestion(mockQuestion)
           setAnswers(mockAnswers)
         }
       } catch (error) {
         console.error('Error fetching question:', error)
-        // Fallback to mock data on error
         setQuestion(mockQuestion)
         setAnswers(mockAnswers)
       }
@@ -246,8 +257,8 @@ export const AuthProvider = ({ children }) => {
           </div>
 
           {/* Question Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">
+          <article className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight" itemProp="name">
               {question.title}
             </h1>
             
@@ -267,7 +278,7 @@ export const AuthProvider = ({ children }) => {
             </div>
             
             <hr className="border-[#2C2C2E]" />
-          </div>
+          </article>
 
           {/* Question Content */}
           <div className="flex gap-6 mb-8">
@@ -335,7 +346,7 @@ export const AuthProvider = ({ children }) => {
           </div>
 
           {/* Answers Section */}
-          <div className="mb-8">
+          <section className="mb-8">
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
               <MessageSquare className="text-[#007AFF] w-5 h-5" />
               {answers.length} Answer{answers.length !== 1 ? 's' : ''}
@@ -398,7 +409,7 @@ export const AuthProvider = ({ children }) => {
                 </div>
               </div>
             ))}
-          </div>
+          </section>
 
           {/* Answer Form */}
           <div className="bg-[#1C1C1E] rounded-lg p-6">

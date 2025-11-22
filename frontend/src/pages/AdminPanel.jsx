@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Users, MessageSquare, Trash2, Ban, Shield, AlertTriangle } from 'lucide-react';
+import { Users, MessageSquare, Trash2, Ban, Shield, AlertTriangle, X } from 'lucide-react';
 import useAdminStore from '../store/adminStore';
 import useAuthStore from '../store/authStore';
+import { updateMetaTags } from '../utils/seo';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users');
+  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
   const { users, questions, getAllUsers, getAllQuestions, toggleBanUser, deleteUser, deleteQuestion, deleteAnswer, isLoading, error } = useAdminStore();
   const { user } = useAuthStore();
 
@@ -12,6 +14,13 @@ const AdminPanel = () => {
     if (user?.role === 'admin') {
       getAllUsers();
       getAllQuestions();
+      
+      updateMetaTags({
+        title: 'Admin Panel - StackIT | Manage Users & Content',
+        description: 'StackIT admin dashboard for managing users, questions, answers, and community moderation.',
+        keywords: 'admin panel, content moderation, user management',
+        canonical: `${window.location.origin}/admin`
+      });
     }
   }, [user]);
 
@@ -27,49 +36,96 @@ const AdminPanel = () => {
     );
   }
 
-  const handleBanUser = async (userId, userName) => {
-    if (confirm(`Are you sure you want to ban/unban ${userName}?`)) {
-      const result = await toggleBanUser(userId);
-      if (!result.success) {
-        alert(result.error);
+  const showConfirm = (title, message, onConfirm) => {
+    setConfirmModal({ show: true, title, message, onConfirm });
+  };
+
+  const handleBanUser = async (userId, userName, isBanned) => {
+    showConfirm(
+      isBanned ? 'Unban User' : 'Ban User',
+      `Are you sure you want to ${isBanned ? 'unban' : 'ban'} ${userName}?`,
+      async () => {
+        const result = await toggleBanUser(userId);
+        setConfirmModal({ show: false, title: '', message: '', onConfirm: null });
       }
-    }
+    );
   };
 
   const handleDeleteUser = async (userId, userName) => {
-    if (confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
-      const result = await deleteUser(userId);
-      if (!result.success) {
-        alert(result.error);
+    showConfirm(
+      'Delete User',
+      `Are you sure you want to delete ${userName}? This action cannot be undone.`,
+      async () => {
+        await deleteUser(userId);
+        setConfirmModal({ show: false, title: '', message: '', onConfirm: null });
       }
-    }
+    );
   };
 
   const handleDeleteQuestion = async (questionId, questionTitle) => {
-    if (confirm(`Are you sure you want to delete "${questionTitle}"? This will also delete all answers.`)) {
-      const result = await deleteQuestion(questionId);
-      if (!result.success) {
-        alert(result.error);
+    showConfirm(
+      'Delete Question',
+      `Are you sure you want to delete "${questionTitle}"? This will also delete all answers.`,
+      async () => {
+        await deleteQuestion(questionId);
+        setConfirmModal({ show: false, title: '', message: '', onConfirm: null });
       }
-    }
+    );
   };
 
   const handleDeleteAnswer = async (answerId) => {
-    if (confirm('Are you sure you want to delete this answer?')) {
-      const result = await deleteAnswer(answerId);
-      if (!result.success) {
-        alert(result.error);
+    showConfirm(
+      'Delete Answer',
+      'Are you sure you want to delete this answer?',
+      async () => {
+        await deleteAnswer(answerId);
+        setConfirmModal({ show: false, title: '', message: '', onConfirm: null });
       }
-    }
+    );
   };
 
   return (
     <div className="min-h-screen bg-[#0C0C0C] pt-6">
+      {/* Confirmation Modal */}
+      {confirmModal.show && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1C1C1E] rounded-xl p-6 w-full max-w-md border border-[#3A3A3C] animate-[slideUp_0.3s_ease-out]">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-orange-500" />
+                {confirmModal.title}
+              </h3>
+              <button
+                onClick={() => setConfirmModal({ show: false, title: '', message: '', onConfirm: null })}
+                className="text-[#8E8E93] hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-[#8E8E93] mb-6">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmModal({ show: false, title: '', message: '', onConfirm: null })}
+                className="flex-1 bg-[#2C2C2E] text-white py-3 rounded-lg font-medium hover:bg-[#3C3C3E] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmModal.onConfirm}
+                className="flex-1 bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="mb-8">
+        <header className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
           <p className="text-[#8E8E93]">Manage users, questions, and answers</p>
-        </div>
+        </header>
 
         {/* Tab Navigation */}
         <div className="flex gap-4 mb-6">
@@ -149,7 +205,7 @@ const AdminPanel = () => {
                         {user.role !== 'admin' && (
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleBanUser(user._id, user.name)}
+                              onClick={() => handleBanUser(user._id, user.name, user.isBanned)}
                               className={`p-2 rounded-lg transition-colors ${
                                 user.isBanned
                                   ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import { updateMetaTags } from '../utils/seo';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,15 @@ const Register = () => {
   
   const { register, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    updateMetaTags({
+      title: 'Sign Up for StackIT - Join the Q&A Community',
+      description: 'Create your free StackIT account and start asking questions, sharing knowledge, and connecting with developers worldwide. Join our growing community today.',
+      keywords: 'sign up, register, create account, join StackIT, developer community, Q&A platform registration',
+      canonical: `${window.location.origin}/register`
+    });
+  }, []);
 
   const handleChange = (e) => {
     clearError();
@@ -39,10 +49,10 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0C0C0C] to-[#1C1C1E] flex items-center justify-center p-5">
       <div className="bg-[#1C1C1E] rounded-2xl p-12 w-full max-w-md shadow-2xl border border-[#3A3A3C] animate-[slideUp_0.8s_cubic-bezier(0.25,0.46,0.45,0.94)]">
-        <div className="text-center mb-8 animate-[fadeInDown_0.8s_ease-out_0.2s_both]">
+        <header className="text-center mb-8 animate-[fadeInDown_0.8s_ease-out_0.2s_both]">
           <h1 className="text-3xl font-bold text-white mb-2 text-gradient">Join StackIT</h1>
           <p className="text-[#8E8E93] text-base m-0">Create your account and start asking questions</p>
-        </div>
+        </header>
 
         <form onSubmit={handleSubmit} className="w-full animate-[fadeInUp_0.8s_ease-out_0.4s_both]">
           <div className="mb-5 animate-[slideInLeft_0.6s_ease-out_0.6s_both]">

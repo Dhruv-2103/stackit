@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { updateMetaTags, addStructuredData } from '../utils/seo';
 
 const Tags = () => {
   const [tags, setTags] = useState([]);
@@ -9,6 +10,21 @@ const Tags = () => {
 
   useEffect(() => {
     fetchTags();
+    
+    updateMetaTags({
+      title: 'Browse Tags - StackIT | Find Questions by Topic',
+      description: 'Explore programming topics and tags on StackIT. Find questions about React, JavaScript, Node.js, MongoDB, Python, and more. Filter by your favorite technologies.',
+      keywords: 'programming tags, technology topics, React questions, JavaScript help, Node.js, MongoDB, Python, web development topics',
+      canonical: `${window.location.origin}/tags`
+    });
+
+    addStructuredData({
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Programming Tags",
+      "description": "Browse questions by programming language and technology tags",
+      "url": `${window.location.origin}/tags`
+    });
   }, []);
 
   const fetchTags = async () => {
@@ -39,7 +55,7 @@ const Tags = () => {
   return (
     <div className="min-h-screen bg-[#0D0D0F] text-white">
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-8">
+        <header className="mb-8">
           <h1 className="text-3xl font-bold mb-4">Tags</h1>
           <p className="text-[#8E8E93] mb-6">
             Browse questions by tags to find topics you're interested in.
@@ -57,7 +73,7 @@ const Tags = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-        </div>
+        </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredTags.map((tag) => (

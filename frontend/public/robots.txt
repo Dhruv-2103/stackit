@@ -1,0 +1,25 @@
+# robots.txt for StackIT
+User-agent: *
+Allow: /
+Allow: /questions
+Allow: /questions/*
+Allow: /tags
+Disallow: /admin
+Disallow: /profile
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://stackit.example.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
