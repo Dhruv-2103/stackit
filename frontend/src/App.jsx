@@ -13,7 +13,7 @@ import Profile from './pages/Profile';
 
 function App() {
   const { initAuth } = useAuthStore();
-  
+
   useEffect(() => {
     initAuth();
   }, [initAuth]);
