@@ -2,7 +2,7 @@
 
 export const updateMetaTags = ({ title, description, keywords, ogType = 'website', ogImage, canonical }) => {
   document.title = title;
-  
+
   const metaTags = [
     { name: 'description', content: description },
     { name: 'keywords', content: keywords },
@@ -28,7 +28,7 @@ export const updateMetaTags = ({ title, description, keywords, ogType = 'website
   metaTags.forEach(({ name, property, content }) => {
     const selector = name ? `meta[name="${name}"]` : `meta[property="${property}"]`;
     let element = document.querySelector(selector);
-    
+
     if (!element) {
       element = document.createElement('meta');
       if (name) element.setAttribute('name', name);
@@ -50,9 +50,9 @@ export const updateMetaTags = ({ title, description, keywords, ogType = 'website
 export const addStructuredData = (data) => {
   const scriptId = 'structured-data';
   let script = document.getElementById(scriptId);
-  
+
   if (script) script.remove();
-  
+
   script = document.createElement('script');
   script.id = scriptId;
   script.type = 'application/ld+json';
